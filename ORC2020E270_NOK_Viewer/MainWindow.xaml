@@ -1,0 +1,33 @@
+﻿<Window x:Class="ORC2020E270_NOK_Viewer.MainWindow"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ORC2020E270_NOK_Viewer"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
+    <Grid x:Name="gMainGrid" ShowGridLines="False" Uid="gMainGrid">
+        <Grid.RowDefinitions>
+            <!-- Brand bar -->
+            <RowDefinition Height="100px"/>
+            <RowDefinition Height="65px"/>
+            <RowDefinition/>
+            <RowDefinition Height="45px"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+
+        </Grid.ColumnDefinitions>
+
+        <Rectangle Grid.Row="0" Fill="#646464"/>
+        <Image Grid.Row="0" x:Name="piBandLogo" Margin="10,10,0,10" Source="pack://application:,,,/SPMaqLogo.png" Width="230" HorizontalAlignment="Left"/>
+        <Label 
+            Grid.Row="0" 
+            Grid.Column="0"
+            x:Name="lAppNAme" 
+            Foreground="White" 
+            HorizontalContentAlignment="Center" 
+            VerticalContentAlignment="Center" 
+            Content="app name" Margin="10" FontSize="36" Uid="lAppNAme"/>
+    </Grid>
+</Window>
