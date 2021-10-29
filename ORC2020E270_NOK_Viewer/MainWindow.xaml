@@ -1,33 +1,176 @@
 ﻿<Window x:Class="ORC2020E270_NOK_Viewer.MainWindow"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
         xmlns:local="clr-namespace:ORC2020E270_NOK_Viewer"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
-    <Grid x:Name="gMainGrid" ShowGridLines="False" Uid="gMainGrid">
+        mc:Ignorable="d"       
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"        
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Normal"
+        TextElement.FontSize="15"
+        TextOptions.TextFormattingMode="Ideal" 
+        TextOptions.TextRenderingMode="Auto"        
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        
+        Title="MainWindow" Height="800" Width="1000">
+    
+    <!--#region Menu-->
+    <materialDesign:DrawerHost
+            IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}">
+        <materialDesign:DrawerHost.LeftDrawerContent>
+            <DockPanel MinWidth="220">
+                <ToggleButton 
+                        Style="{StaticResource MaterialDesignHamburgerToggleButton}" 
+                        DockPanel.Dock="Top"
+                        HorizontalAlignment="Right" 
+                        Margin="16"
+                        IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}"/>
+                <TextBox 
+                        x:Name="DemoItemsSearchBox"
+                        Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                        DockPanel.Dock="Top"
+                        Margin="16, 4"
+                        Width="200"
+                        materialDesign:HintAssist.Hint="Search"
+                        materialDesign:HintAssist.IsFloating="True"
+                        materialDesign:TextFieldAssist.HasClearButton="True"
+                        materialDesign:TextFieldAssist.HasOutlinedTextField="True"
+                        materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                        materialDesign:TextFieldAssist.TextFieldCornerRadius="4"/>
+                <ListBox 
+                        x:Name="DemoItemsListBox" 
+                        Margin="0 16 0 16"
+                        SelectedIndex="{Binding SelectedIndex}"
+                        SelectedItem="{Binding SelectedItem, UpdateSourceTrigger=PropertyChanged}"
+                        ItemsSource="{Binding Path=list}"
+                        PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp"
+                        AutomationProperties.Name="DemoPagesListBox"
+                        Style="{StaticResource MaterialDesignNavigationPrimaryListBox}">
+                    <ListBox.Resources>
+                        <Style TargetType="ScrollBar" BasedOn="{StaticResource MaterialDesignScrollBarMinimal}"/>
+                    </ListBox.Resources>                    
+                </ListBox>
+            </DockPanel>
+        </materialDesign:DrawerHost.LeftDrawerContent>
+    <!--#endregion-->
+        
+    <Grid>
         <Grid.RowDefinitions>
-            <!-- Brand bar -->
-            <RowDefinition Height="100px"/>
-            <RowDefinition Height="65px"/>
-            <RowDefinition/>
-            <RowDefinition Height="45px"/>
+            <RowDefinition x:Name="RowTitle" Height="80"/>
+            <RowDefinition x:Name="RowDateTimeRange" Height="70" materialDesign:BottomDashedLineAdorner.Brush="Black"/>
+            <RowDefinition x:Name="RowQueryResult" Height="90*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
+        <!--#region Title -->
+        <materialDesign:ColorZone
+            Grid.Row="0"
+            Mode="PrimaryDark"
+            Padding="16" Margin="0,0,0,0" VerticalAlignment="Stretch">
+            <DockPanel>
+                <materialDesign:PopupBox                    
+                    DockPanel.Dock="Right"
+                    PlacementMode="BottomAndAlignRightEdges">
+                        <StackPanel>
+                            <Grid Margin="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <TextBlock
+                                        Text="Light"
+                                        Margin="0 0 10 0"/>
+                                <ToggleButton
+                                        x:Name="DarkModeToggleButton"
+                                        Click="ModifyTheme"
+                                        Grid.Column="1"
+                                    IsChecked="True"/>
+                                <TextBlock
+                                        Text="Dark"
+                                        Margin="10 0 0 0"
+                                        Grid.Column="2"/>
+                            </Grid>
 
-        </Grid.ColumnDefinitions>
+                            <Separator/>
+                            <ListBox>
+                        <ListBoxItem
+                        Content="Hello World" />
+                        <ListBoxItem
+                            Content="Nice Popup" />
+                        <ListBoxItem
+                            Content="Goodbye" />
+                            </ListBox>
+                        </StackPanel>
+                    </materialDesign:PopupBox>
+                <StackPanel
+                    Orientation="Horizontal">
+                    <ToggleButton
+                        x:Name="MenuToggleButton"
+                        Style="{DynamicResource         MaterialDesignHamburgerToggleButton}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Margin="16 0 0 0"
+                        Text="Shift ##" />
+                </StackPanel>
+            </DockPanel>
+        </materialDesign:ColorZone>
+        <!--#endregion-->
 
-        <Rectangle Grid.Row="0" Fill="#646464"/>
-        <Image Grid.Row="0" x:Name="piBandLogo" Margin="10,10,0,10" Source="pack://application:,,,/SPMaqLogo.png" Width="230" HorizontalAlignment="Left"/>
-        <Label 
-            Grid.Row="0" 
-            Grid.Column="0"
-            x:Name="lAppNAme" 
-            Foreground="White" 
-            HorizontalContentAlignment="Center" 
-            VerticalContentAlignment="Center" 
-            Content="app name" Margin="10" FontSize="36" Uid="lAppNAme"/>
+        <!--#region Date and Time -->
+        <Grid Grid.Row="1">
+            <StackPanel Margin="0" Orientation="Horizontal" IsEnabled="True">
+                <DatePicker
+                    SelectedDate="10/28/2021"
+                    Margin="5"
+                    Width="140"
+                    materialDesign:HintAssist.Hint="Start Date"
+                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" HorizontalAlignment="Center"  />
+                <materialDesign:TimePicker
+                    Is24Hours="True"
+                    SelectedTime="21:56" 
+                    Margin="5"
+                    Width="140"
+                    materialDesign:HintAssist.Hint="Start Time"
+                    Style="{StaticResource MaterialDesignOutlinedTimePicker}" />
+                <DatePicker
+                    SelectedDate="10/28/2021" 
+                    Margin="40 5 5 5"
+                    Width="140"
+                    materialDesign:HintAssist.Hint="End Date"
+                    Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                <materialDesign:TimePicker
+                    Is24Hours="True"
+                    SelectedTime="21:56" 
+                    Margin="5"
+                    Width="140"
+                    materialDesign:HintAssist.Hint="End Time"
+                    Style="{StaticResource MaterialDesignOutlinedTimePicker}" />
+                <Button
+                    Margin="40 5 5 5"
+                    Height="50"
+                    Style="{StaticResource MaterialDesignRaisedDarkButton}"
+                    ToolTip="Update query"
+                    Content="Show"
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" />
+                    <Separator/>
+                </StackPanel>
+        </Grid>
+        <DataGrid
+            Grid.Row="2"
+            AutoGenerateColumns="True"
+            ItemsSource="{Binding Path=QueryResults}"
+            CanUserAddRows="False"
+            SelectionUnit="Cell"
+            SelectionMode="Extended" 
+            IsReadOnly="True"/>
+        <!--#endregion-->
     </Grid>
+    </materialDesign:DrawerHost>
 </Window>

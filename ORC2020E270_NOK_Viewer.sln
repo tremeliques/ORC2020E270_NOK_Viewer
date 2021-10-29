@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.30517.126
+VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ORC2020E270_NOK_Viewer", "ORC2020E270_NOK_Viewer\ORC2020E270_NOK_Viewer.csproj", "{C7089E4E-97EA-4FBA-9F47-513CF36A5AA3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ORC2020E270_NOK_Viewer", "ORC2020E270_NOK_Viewer\ORC2020E270_NOK_Viewer.csproj", "{AF04D6D9-307F-47D5-93B2-ED5FA81096BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C7089E4E-97EA-4FBA-9F47-513CF36A5AA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C7089E4E-97EA-4FBA-9F47-513CF36A5AA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C7089E4E-97EA-4FBA-9F47-513CF36A5AA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C7089E4E-97EA-4FBA-9F47-513CF36A5AA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF04D6D9-307F-47D5-93B2-ED5FA81096BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF04D6D9-307F-47D5-93B2-ED5FA81096BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF04D6D9-307F-47D5-93B2-ED5FA81096BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF04D6D9-307F-47D5-93B2-ED5FA81096BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {DD7376A8-C83E-4C5C-A20A-993703613FA2}
+		SolutionGuid = {7DFF458E-BCE9-4E53-BC95-8745FEDAED68}
 	EndGlobalSection
 EndGlobal
