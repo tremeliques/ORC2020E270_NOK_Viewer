@@ -16,7 +16,7 @@
         
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         
-        Title="MainWindow" Height="800" Width="1000">
+        Title="MainWindow" Height="800" Width="1000" Loaded="Window_Loaded">
     
     <!--#region Menu-->
     <materialDesign:DrawerHost
@@ -42,11 +42,11 @@
                         materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
                         materialDesign:TextFieldAssist.TextFieldCornerRadius="4"/>
                 <ListBox 
-                        x:Name="DemoItemsListBox" 
+                        x:Name="lbShifts" 
                         Margin="0 16 0 16"
                         SelectedIndex="{Binding SelectedIndex}"
                         SelectedItem="{Binding SelectedItem, UpdateSourceTrigger=PropertyChanged}"
-                        ItemsSource="{Binding Path=list}"
+                        ItemsSource="{Binding Path=shiftList}"
                         PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp"
                         AutomationProperties.Name="DemoPagesListBox"
                         Style="{StaticResource MaterialDesignNavigationPrimaryListBox}">
@@ -152,13 +152,13 @@
                     Width="140"
                     materialDesign:HintAssist.Hint="End Time"
                     Style="{StaticResource MaterialDesignOutlinedTimePicker}" />
-                <Button
+                <Button x:Name="bCustomShowData"
                     Margin="40 5 5 5"
                     Height="50"
                     Style="{StaticResource MaterialDesignRaisedDarkButton}"
                     ToolTip="Update query"
                     Content="Show"
-                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" />
+                    IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Click="bCustomShowData_Click" />
                     <Separator/>
                 </StackPanel>
         </Grid>
