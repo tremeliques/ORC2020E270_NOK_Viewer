@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
 using MaterialDesignThemes.Wpf;
 
 using uBix.Utilities;
@@ -25,6 +26,15 @@ namespace ORC2020E270_NOK_Viewer
     {
         public List<SQLView> QueryResults { get; set; }
         public List<string> shiftList { get; set; }
+
+        #region Settings
+
+        private const String settingsIniFile = @".\Config\Settings.ini";
+
+        private uint queryRefreshTime = 30;
+        private log4net.ILog log = log4net.LogManager.GetLogger("");
+
+        #endregion Settings
 
         public MainWindow()
         {
@@ -74,9 +84,43 @@ namespace ORC2020E270_NOK_Viewer
             shiftList.Add("Custom");
         }
 
+        private async void ShowMsg(String msg)
+        {
+            var msgPopup = new IconPopup(msg, IconPopupType.Accept);
+            await DialogHost.Show(msgPopup, "RootDialog");
+        }
+
         private void bCustomShowData_Click(object sender, RoutedEventArgs e)
         {
-            
+            ShowMsg("_olá mundo_");
+        }
+
+        /// <summary>
+        /// Load settings from settings.ini file
+        /// </summary>
+        private void LoadSettings()
+        {
+            // check if settings files exists
+            if (!File.Exists(settingsIniFile))
+            {
+                var s = new DialogHost();
+                s.ShowDialog(this);
+            }
+
+            String sTmp = "";
+            IniFile settings = new IniFile(settingsIniFile);
+
+
+
+            Logger.XmlLoggerConfiguration(sTmp);
+            log = Logger.GetLogger("Application");
+        }
+
+        private void button_Click(object sender, RoutedEventArgs e)
+        {
+            var s = new DialogHost();
+            s.Content = "ola mundo";
+            s.ShowDialog(this);
         }
     }    
 }
