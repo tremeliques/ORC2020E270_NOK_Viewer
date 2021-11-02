@@ -48,32 +48,34 @@
             <materialDesign:DrawerHost.LeftDrawerContent>
                 <DockPanel MinWidth="220">
                     <ToggleButton 
-                            Style="{StaticResource MaterialDesignHamburgerToggleButton}" 
-                            DockPanel.Dock="Top"
-                            HorizontalAlignment="Right" 
-                            Margin="16"
-                            IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}"/>
+                        Style="{StaticResource MaterialDesignHamburgerToggleButton}" 
+                        DockPanel.Dock="Top"
+                        HorizontalAlignment="Right" 
+                        Margin="16"
+                        IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}"/>
                     <TextBox 
-                            x:Name="DemoItemsSearchBox"
-                            Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
-                            DockPanel.Dock="Top"
-                            Margin="16, 4"
-                            Width="200"
-                            materialDesign:HintAssist.Hint="Search"
-                            materialDesign:HintAssist.IsFloating="True"
-                            materialDesign:TextFieldAssist.HasClearButton="True"
-                            materialDesign:TextFieldAssist.HasOutlinedTextField="True"
-                            materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
-                            materialDesign:TextFieldAssist.TextFieldCornerRadius="4"/>
+                        x:Name="txBoxItemsSearchBox"
+                        Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
+                        DockPanel.Dock="Top"
+                        Margin="16, 4"
+                        Width="200"
+                        materialDesign:HintAssist.Hint="Search"
+                        materialDesign:HintAssist.IsFloating="True"
+                        materialDesign:TextFieldAssist.HasClearButton="True"
+                        materialDesign:TextFieldAssist.HasOutlinedTextField="True"
+                        materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                        materialDesign:TextFieldAssist.TextFieldCornerRadius="4"
+                        Visibility="Collapsed"
+                        IsEnabled="False"/>
                     <ListBox 
-                            x:Name="lbShifts" 
-                            Margin="0 16 0 16"
-                            SelectedIndex="{Binding SelectedIndex}"
-                            SelectedItem="{Binding SelectedItem, UpdateSourceTrigger=PropertyChanged}"
-                            ItemsSource="{Binding Path=shiftList}"
-                            PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp"
-                            AutomationProperties.Name="DemoPagesListBox"
-                            Style="{StaticResource MaterialDesignNavigationPrimaryListBox}">
+                        x:Name="lbShifts" 
+                        Margin="0 16 0 16"
+                        SelectedIndex="{Binding SelectedIndex}"
+                        SelectedItem="{Binding SelectedItem, UpdateSourceTrigger=PropertyChanged}"
+                        ItemsSource="{Binding Path=shiftList}"
+                        PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp"
+                        AutomationProperties.Name="DemoPagesListBox"
+                        Style="{StaticResource MaterialDesignNavigationPrimaryListBox}">
                         <ListBox.Resources>
                             <Style TargetType="ScrollBar" BasedOn="{StaticResource MaterialDesignScrollBarMinimal}"/>
                         </ListBox.Resources>                    
