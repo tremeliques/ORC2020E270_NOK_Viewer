@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,9 +33,95 @@ namespace ORC2020E270_NOK_Viewer
         private const String settingsIniFile = @".\Config\Settings.ini";
 
         private uint queryRefreshTime = 30;
+        private string dbConnectionString = "";
+        private string shiftsIniFile = "";
         private log4net.ILog log = log4net.LogManager.GetLogger("");
 
         #endregion Settings
+
+        private class Shifts
+        {
+            public String Name { private set; get; }
+            public DateTime StartDateTime { private set; get; }
+            public DateTime EndDateTime { private set; get; }
+            public int ShitfDuration { private set; get; }
+            public String ShiftWeekPattern { private get; set; }
+            public bool IsSunday { private set; get; }
+            public bool IsMonday { private set; get; }
+            public bool IsTuesday { private set; get; }
+            public bool IsWednesday { private set; get; }
+            public bool IsThursday { private set; get; }
+            public bool IsFriday { private set; get; }
+            public bool IsSaturday { private set; get; }
+
+            private String startTime;
+
+            public Shifts(String name, String startTime, int shiftDuration, String shiftWeekPattern)
+            {
+                ResetFields();
+                this.Name = name;
+                this.ShitfDuration = shiftDuration;
+                this.ShiftWeekPattern = shiftWeekPattern;
+                this.startTime = startTime;
+
+                StartDateTime = Convert.ToDateTime(startTime);
+                EndDateTime = StartDateTime.AddMinutes(shiftDuration);
+                ParsingShiftWeekPattern();
+            }
+
+            /// <summary>
+            /// Reset object fields
+            /// </summary>
+            private void ResetFields()
+            {
+                Name = "";
+                StartDateTime = DateTime.MinValue;
+                EndDateTime = DateTime.MinValue;
+                ShitfDuration = 0;
+                ShiftWeekPattern = "";
+                IsSunday = false;
+                IsMonday = false;
+                IsTuesday = false;
+                IsWednesday = false;
+                IsThursday = false;
+                IsFriday = false;
+                IsSaturday = false;
+            }
+
+            /// <summary>
+            /// Parsing shift week pattern string
+            /// </summary>
+            private void ParsingShiftWeekPattern()
+            {
+                String[] separator = { "," };
+                String[] pars = ShiftWeekPattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+
+                if (pars.Length == 0) return;
+
+                if (pars.Contains("1")) IsSunday = true;
+                if (pars.Contains("2")) IsMonday = true;
+                if (pars.Contains("3")) IsTuesday = true;
+                if (pars.Contains("4")) IsWednesday = true;
+                if (pars.Contains("5")) IsThursday = true;
+                if (pars.Contains("6")) IsFriday = true;
+                if (pars.Contains("7")) IsSaturday = true;
+            }
+
+            /// <summary>
+            /// Update start and end date time
+            /// </summary>
+            public void UpdateDateAndTime()
+            {
+                DateTime now = DateTime.Now;
+                if ((now >= StartDateTime) && (now <= EndDateTime)) return;
+                else
+                {
+                    StartDateTime = Convert.ToDateTime(startTime);
+                    EndDateTime = StartDateTime.AddMinutes(ShitfDuration);
+                }
+            }
+        }
+        private List<Shifts> shiftObjList = new List<Shifts>();
 
         public MainWindow()
         {
@@ -78,21 +165,12 @@ namespace ORC2020E270_NOK_Viewer
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            shiftList.Add("Shift 1");
-            shiftList.Add("Shift 2");
-            shiftList.Add("Shift 3");
-            shiftList.Add("Custom");
-        }
-
-        private async void ShowMsg(String msg)
-        {
-            var msgPopup = new IconPopup(msg, IconPopupType.Accept);
-            await DialogHost.Show(msgPopup, "RootDialog");
+            LoadSettings();
+            LoadShiftList();
         }
 
         private void bCustomShowData_Click(object sender, RoutedEventArgs e)
         {
-            ShowMsg("_olá mundo_");
         }
 
         /// <summary>
@@ -103,24 +181,92 @@ namespace ORC2020E270_NOK_Viewer
             // check if settings files exists
             if (!File.Exists(settingsIniFile))
             {
-                var s = new DialogHost();
-                s.ShowDialog(this);
+                IconPopup.ShowDialog(String.Format("File {0} does not exist! Application will be closed.", settingsIniFile), IconPopupType.Error);
+                System.Windows.Application.Current.Shutdown();
             }
 
             String sTmp = "";
             IniFile settings = new IniFile(settingsIniFile);
 
+            // load application logger name
+            if (!settings.readString("Global", "LoggerName", out sTmp)) sTmp = "";
 
-
+            // get logger
             Logger.XmlLoggerConfiguration(sTmp);
             log = Logger.GetLogger("Application");
+
+            log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Loading application settings...");
+
+            if (!settings.readUInt("Global", "RefreshTime", out queryRefreshTime)) queryRefreshTime = 30;
+            if (!settings.readString("Global", "ShiftsIniFile", out shiftsIniFile)) shiftsIniFile = @".\Config\Shifts.ini";
+
+            // reading database connection string
+            settings.RemoveCommentSign(";");
+            if (!settings.readString("Database", "ConnectionString", out dbConnectionString))
+            {
+                sTmp = "There is no connection string parameters under Database header";
+                log.FatalFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, sTmp);
+                IconPopup.ShowDialog(sTmp + ". Application will be closed", IconPopupType.Critical);
+                System.Windows.Application.Current.Shutdown();
+            }
+            settings.AddCommentSign(";");
+
+            // debug load settings
+            log.DebugFormat("[{0}]\t[{1}] {2} = {3}", MethodBase.GetCurrentMethod().Name, "Global", "RefreshTime", queryRefreshTime);
+            log.DebugFormat("[{0}]\t[{1}] {2} = {3}", MethodBase.GetCurrentMethod().Name, "Global", "ShiftsIniFile", shiftsIniFile);
+            log.DebugFormat("[{0}]\t[{1}] {2} = {3}", MethodBase.GetCurrentMethod().Name, "GloDatabasebal", "ConnectionString", dbConnectionString);
+
+            settings.Dispose();
         }
 
-        private void button_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Load shift list from ini file
+        /// </summary>
+        private void LoadShiftList()
         {
-            var s = new DialogHost();
-            s.Content = "ola mundo";
-            s.ShowDialog(this);
+            shiftObjList.Clear();
+            shiftList.Clear();
+
+            // check if shifts files exists
+            if (!File.Exists(shiftsIniFile))
+            {
+                IconPopup.ShowDialog(String.Format("File {0} does not exist!", shiftsIniFile), IconPopupType.Error);
+            }
+            else
+            {
+                using (IniFile shifts = new IniFile(shiftsIniFile))
+                {
+                    String[] headers = shifts.GetNodesNames();
+                    if (headers.Length > 0)
+                    {
+                        shiftObjList.Clear();
+                        String name;
+                        String startTime;
+                        int shitDuration;
+                        String shiftWeekPattern;
+
+                        foreach(String header in headers)
+                        {
+                            if (!shifts.readString(header, "Name", out name)) name = "";
+                            if (!shifts.readInt(header, "ShiftDuration", out shitDuration)) shitDuration = 0;
+                            if (!shifts.readString(header, "StartTime", out startTime)) startTime = "";
+                            if (!shifts.readString(header, "ShiftWeekPattern", out shiftWeekPattern)) shiftWeekPattern = "";
+
+                            if ((name != "") && (startTime != ""))
+                                shiftObjList.Add(new Shifts(name, startTime, shitDuration, shiftWeekPattern));
+                        }
+                    }
+                }
+            }
+
+            if (shiftObjList.Count > 0)
+            {
+                foreach(Shifts shift in shiftObjList)
+                {
+                    shiftList.Add(shift.Name);
+                }
+            }
+            shiftList.Add("Custom");
         }
     }    
 }
