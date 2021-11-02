@@ -65,8 +65,9 @@
                         materialDesign:TextFieldAssist.HasOutlinedTextField="True"
                         materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
                         materialDesign:TextFieldAssist.TextFieldCornerRadius="4"
-                        Visibility="Collapsed"
-                        IsEnabled="False"/>
+                        Visibility="{Binding Path=menuSettings.UISearchElement.Visibility}"
+                        IsEnabled="{Binding Path=menuSettings.UISearchElement.IsEnabled}"
+                        />
                     <ListBox 
                         x:Name="lbShifts" 
                         Margin="0 16 0 16"
@@ -111,17 +112,17 @@
                                         <RowDefinition />
                                     </Grid.RowDefinitions>
                                     <TextBlock
-                                                Text="Light"
-                                                Margin="0 0 10 0"/>
+                                        Text="Light"
+                                        Margin="0 0 10 0"/>
                                     <ToggleButton
-                                                x:Name="DarkModeToggleButton"
-                                                Click="ModifyTheme"
-                                                Grid.Column="1"
-                                            IsChecked="True"/>
+                                        x:Name="DarkModeToggleButton"
+                                        Click="ModifyTheme"
+                                        Grid.Column="1"
+                                        IsChecked="True"/>
                                     <TextBlock
-                                                Text="Dark"
-                                                Margin="10 0 0 0"
-                                                Grid.Column="2"/>
+                                        Text="Dark"
+                                        Margin="10 0 0 0"
+                                        Grid.Column="2"/>
                                 </Grid>
 
                                 <Separator/>

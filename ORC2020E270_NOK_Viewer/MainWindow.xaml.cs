@@ -24,8 +24,11 @@ namespace ORC2020E270_NOK_Viewer
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region [Properties]
         public List<SQLView> QueryResults { get; set; }
         public List<string> shiftList { get; set; }
+        public MenuSettings menuSettings { get; set; }
+        #endregion
 
         #region Settings
 
@@ -38,17 +41,21 @@ namespace ORC2020E270_NOK_Viewer
 
         public MainWindow()
         {
+            #region [ToDelete]
             var rnd = new Random();
             QueryResults = new List<SQLView>();
 
             for (int i = 0; i < 100; i++)
             {
-                QueryResults.Add(new SQLView() { ID = i, Ref = "abc", OkNOk = (short)rnd.Next(0,3) });
+                QueryResults.Add(new SQLView() { ID = i, Ref = "abc", OkNOk = (short)rnd.Next(0, 3) });
             }
+            #endregion
 
-            //list = new List<string>() { "Shift 1", "Shift 2", "Shift 3", "Custom" };
             shiftList = new List<string>();
             shiftList.Clear();
+
+            menuSettings = new MenuSettings();
+
             InitializeComponent();
         }
 
@@ -60,6 +67,11 @@ namespace ORC2020E270_NOK_Viewer
             MenuToggleButton.IsChecked = false;
         }
 
+        /// <summary>
+        /// Event to switch between dark and light theme
+        /// </summary>
+        /// <param name="sender">Object sender</param>
+        /// <param name="e">Event Arguments</param>
         private void ModifyTheme(object sender, RoutedEventArgs e)
         {
             var paletteHelper = new PaletteHelper();
@@ -76,12 +88,37 @@ namespace ORC2020E270_NOK_Viewer
             public short OkNOk { get; set; }
         }
 
+        public class MenuSettings
+        {
+            public UIElement UISearchElement { get; set; }
+            
+            public MenuSettings()
+            {
+                UISearchElement = new UIElement();
+                SetToDefault();
+            }
+
+            public void SetToDefault()
+            {
+                this.UISearchElement.IsEnabled= true;
+                this.UISearchElement.Visibility = Visibility.Visible;
+            }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            UpdateMenu();
+
             shiftList.Add("Shift 1");
             shiftList.Add("Shift 2");
             shiftList.Add("Shift 3");
             shiftList.Add("Custom");
+        }
+
+        private void UpdateMenu(bool searchEnable = true)
+        {
+            menuSettings.UISearchElement.IsEnabled = searchEnable;
+            menuSettings.UISearchElement.Visibility = menuSettings.UISearchElement.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private async void ShowMsg(String msg)
@@ -122,5 +159,5 @@ namespace ORC2020E270_NOK_Viewer
             s.Content = "ola mundo";
             s.ShowDialog(this);
         }
-    }    
+    }
 }
