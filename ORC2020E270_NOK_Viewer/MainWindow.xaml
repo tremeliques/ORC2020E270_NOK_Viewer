@@ -76,7 +76,8 @@
                         ItemsSource="{Binding Path=shiftList}"
                         PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp"
                         AutomationProperties.Name="DemoPagesListBox"
-                        Style="{StaticResource MaterialDesignNavigationPrimaryListBox}">
+                        Style="{StaticResource MaterialDesignNavigationPrimaryListBox}"
+                        SelectionChanged="lbShifts_SelectionChanged">
                         <ListBox.Resources>
                             <Style TargetType="ScrollBar" BasedOn="{StaticResource MaterialDesignScrollBarMinimal}"/>
                         </ListBox.Resources>                    
@@ -142,9 +143,10 @@
                                 x:Name="MenuToggleButton"
                                 Style="{DynamicResource         MaterialDesignHamburgerToggleButton}" />
                             <TextBlock
+                                x:Name="tShiftName"
                                 VerticalAlignment="Center"
                                 Margin="16 0 0 0"
-                                Text="Shift ##" />
+                                Text="Shift" />
                         </StackPanel>
                     </DockPanel>
                 </materialDesign:ColorZone>
@@ -152,29 +154,29 @@
 
                 <!--#region Date and Time -->
                 <Grid Grid.Row="1">
-                    <StackPanel Margin="0" Orientation="Horizontal" IsEnabled="True">
-                        <DatePicker
-                            SelectedDate="10/28/2021"
+                    <StackPanel x:Name="stCusomToolBar" Margin="0" Orientation="Horizontal">
+                        <DatePicker x:Name="dpStartDate"
+                            SelectedDate=""
                             Margin="5"
                             Width="140"
                             materialDesign:HintAssist.Hint="Start Date"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}" HorizontalAlignment="Center"  />
-                        <materialDesign:TimePicker
+                        <materialDesign:TimePicker x:Name="tpStartTime"
                             Is24Hours="True"
-                            SelectedTime="21:56" 
+                            SelectedTime="" 
                             Margin="5"
                             Width="140"
                             materialDesign:HintAssist.Hint="Start Time"
                             Style="{StaticResource MaterialDesignOutlinedTimePicker}" />
-                        <DatePicker
-                            SelectedDate="10/28/2021" 
+                        <DatePicker x:Name="dpEndDate"
+                            SelectedDate="" 
                             Margin="40 5 5 5"
                             Width="140"
                             materialDesign:HintAssist.Hint="End Date"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
-                        <materialDesign:TimePicker
+                        <materialDesign:TimePicker x:Name="tpEndTime"
                             Is24Hours="True"
-                            SelectedTime="21:56" 
+                            SelectedTime="" 
                             Margin="5"
                             Width="140"
                             materialDesign:HintAssist.Hint="End Time"

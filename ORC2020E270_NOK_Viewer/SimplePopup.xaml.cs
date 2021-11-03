@@ -22,9 +22,9 @@ namespace ORC2020E270_NOK_Viewer
         /// Display Simple Popup message
         /// </summary>
         /// <param name="msg">Message to be displayed</param>
-        public async static void ShowDialog(string msg, IconPopupType type)
+        public async static void ShowDialog(string msg)
         {
-            IconPopup obj = new IconPopup(msg, type);
+            SimplePopup obj = new SimplePopup(msg);
             await DialogHost.Show(obj, "RootDialog");
         }
     }

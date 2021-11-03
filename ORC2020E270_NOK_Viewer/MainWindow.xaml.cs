@@ -26,8 +26,24 @@ namespace ORC2020E270_NOK_Viewer
     public partial class MainWindow : Window
     {
         public List<SQLView> QueryResults { get; set; }
-        public List<string> shiftList { get; set; }
+
+        private const String customQueryName = "Custom";
+
+        #region BindingElements
+
         public MenuSettings menuSettings { get; private set; } = new MenuSettings();
+        
+        public List<String> shiftList { get; set; }
+
+        //public String SelectedShiftName { get; set; }
+
+        //public Boolean CustomBarEnable { get; set; } = false;
+        //public DateTime StartDate { get; set; } = DateTime.Now;
+        //public DateTime StartTime { get; set; } = DateTime.Now;
+        //public DateTime EndDate { get; set; } = DateTime.Now;
+        //public DateTime EndTime { get; set; } = DateTime.Now;
+
+        #endregion BindingElements
 
         #region Settings
 
@@ -40,7 +56,7 @@ namespace ORC2020E270_NOK_Viewer
 
         #endregion Settings
 
-        private class Shifts
+        public class Shift
         {
             public String Name { private set; get; }
             public DateTime StartDateTime { private set; get; }
@@ -57,7 +73,7 @@ namespace ORC2020E270_NOK_Viewer
 
             private String startTime;
 
-            public Shifts(String name, String startTime, int shiftDuration, String shiftWeekPattern)
+            public Shift(String name, String startTime, int shiftDuration, String shiftWeekPattern)
             {
                 ResetFields();
                 this.Name = name;
@@ -115,14 +131,19 @@ namespace ORC2020E270_NOK_Viewer
             {
                 DateTime now = DateTime.Now;
                 if ((now >= StartDateTime) && (now <= EndDateTime)) return;
-                else
+
+                StartDateTime = Convert.ToDateTime(startTime);
+                EndDateTime = StartDateTime.AddMinutes(ShitfDuration);
+
+                // check if was elapsed
+                if (StartDateTime > DateTime.Now)
                 {
-                    StartDateTime = Convert.ToDateTime(startTime);
-                    EndDateTime = StartDateTime.AddMinutes(ShitfDuration);
+                    StartDateTime = StartDateTime.AddDays(-1);
+                    EndDateTime = EndDateTime.AddDays(-1);
                 }
             }
         }
-        private List<Shifts> shiftObjList = new List<Shifts>();
+        private List<Shift> shiftObjList = new List<Shift>();
         
         /// <summary>
         /// Menu settings - Search text box
@@ -155,6 +176,7 @@ namespace ORC2020E270_NOK_Viewer
             }
             shiftList = new List<string>();
             shiftList.Clear();
+
             InitializeComponent();
         }
 
@@ -197,16 +219,9 @@ namespace ORC2020E270_NOK_Viewer
             public short OkNOk { get; set; }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            LoadSettings();
-            LoadShiftList();
-            LoadMenuSettings(searchEnable: true);
-        }
+        
 
-        private void bCustomShowData_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        
 
         /// <summary>
         /// Load settings from settings.ini file
@@ -288,7 +303,7 @@ namespace ORC2020E270_NOK_Viewer
                             if (!shifts.readString(header, "ShiftWeekPattern", out shiftWeekPattern)) shiftWeekPattern = "";
 
                             if ((name != "") && (startTime != ""))
-                                shiftObjList.Add(new Shifts(name, startTime, shitDuration, shiftWeekPattern));
+                                shiftObjList.Add(new Shift(name, startTime, shitDuration, shiftWeekPattern));
                         }
                     }
                 }
@@ -296,12 +311,66 @@ namespace ORC2020E270_NOK_Viewer
 
             if (shiftObjList.Count > 0)
             {
-                foreach(Shifts shift in shiftObjList)
+                foreach(Shift shift in shiftObjList)
                 {
                     shiftList.Add(shift.Name);
                 }
             }
-            shiftList.Add("Custom");
+            shiftList.Add(customQueryName);
+        }
+
+        /// <summary>
+        /// Select shift based on selected index
+        /// </summary>
+        /// <param name="index">Selected index</param>
+        private void SelectShift(int index)
+        {
+            // check if selected index is outside of the shiftObjList count
+            if ((index < 0) || (index > shiftObjList.Count))
+            {
+                IconPopup.ShowDialog("Selected shift index is outside of the range", IconPopupType.Error);
+                tShiftName.Text = "Please select manually the time interval";
+                stCusomToolBar.IsEnabled = true;
+                return;
+            }
+
+            // check if was selected custom filter
+            if (index == shiftObjList.Count)
+            {
+                tShiftName.Text = customQueryName;
+                stCusomToolBar.IsEnabled = true;
+                return;
+            }
+
+            // shift was selected
+            // load settings
+
+            Shift selShift = shiftObjList[index];
+            selShift.UpdateDateAndTime();
+
+            dpStartDate.SelectedDate = selShift.StartDateTime;
+            tpStartTime.SelectedTime = selShift.StartDateTime;
+            dpEndDate.SelectedDate = selShift.EndDateTime;
+            tpEndTime.SelectedTime = selShift.EndDateTime;
+            tShiftName.Text = selShift.Name;
+
+            stCusomToolBar.IsEnabled = false;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadSettings();
+            LoadShiftList();
+            LoadMenuSettings(searchEnable: true);
+        }
+
+        private void bCustomShowData_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void lbShifts_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SelectShift(lbShifts.SelectedIndex);
         }
     }    
 }
