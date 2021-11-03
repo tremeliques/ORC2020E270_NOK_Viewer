@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using System.Data;
+using System.Data.SqlClient;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,15 +27,20 @@ namespace ORC2020E270_NOK_Viewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        public List<SQLView> QueryResults { get; set; }
-
         private const String customQueryName = "Custom";
+
+        private SqlConnection dbCon = new SqlConnection();
+        private bool isShiftSelected = false;
+        private Shift selectedShift = null;
 
         #region BindingElements
 
         public MenuSettings menuSettings { get; private set; } = new MenuSettings();
         
         public List<String> shiftList { get; set; }
+
+        public DataSet queryDataSet = new DataSet("Shift_NOK_Counter");
+
 
         //public String SelectedShiftName { get; set; }
 
@@ -72,6 +79,7 @@ namespace ORC2020E270_NOK_Viewer
             public bool IsSaturday { private set; get; }
 
             private String startTime;
+            private int[] iWeekParsing = new int[7];
 
             public Shift(String name, String startTime, int shiftDuration, String shiftWeekPattern)
             {
@@ -103,6 +111,9 @@ namespace ORC2020E270_NOK_Viewer
                 IsThursday = false;
                 IsFriday = false;
                 IsSaturday = false;
+
+                for (byte i = 0; i < 7; i++)
+                    iWeekParsing[i] = -1;
             }
 
             /// <summary>
@@ -113,15 +124,30 @@ namespace ORC2020E270_NOK_Viewer
                 String[] separator = { "," };
                 String[] pars = ShiftWeekPattern.Split(separator, StringSplitOptions.RemoveEmptyEntries);
 
-                if (pars.Length == 0) return;
+                if (pars.Length == 0)
+                {
+                    //check if it is a numeric value
+                    int iTmp;
+                    if (int.TryParse(ShiftWeekPattern, out iTmp))
+                    {
+                        iWeekParsing[0] = iTmp;
+                    }
+                }
+                else
+                {
+                    for (byte i = 0; i < pars.Length; i++)
+                    {
+                        if (!int.TryParse(pars[i], out iWeekParsing[i])) iWeekParsing[i] = -1;
+                    }
+                }
 
-                if (pars.Contains("1")) IsSunday = true;
-                if (pars.Contains("2")) IsMonday = true;
-                if (pars.Contains("3")) IsTuesday = true;
-                if (pars.Contains("4")) IsWednesday = true;
-                if (pars.Contains("5")) IsThursday = true;
-                if (pars.Contains("6")) IsFriday = true;
-                if (pars.Contains("7")) IsSaturday = true;
+                if (iWeekParsing.Contains((int)DayOfWeek.Sunday)) IsSunday = true;
+                if (iWeekParsing.Contains((int)DayOfWeek.Monday)) IsMonday = true;
+                if (iWeekParsing.Contains((int)DayOfWeek.Tuesday)) IsTuesday = true;
+                if (iWeekParsing.Contains((int)DayOfWeek.Wednesday)) IsWednesday = true;
+                if (iWeekParsing.Contains((int)DayOfWeek.Thursday)) IsThursday = true;
+                if (iWeekParsing.Contains((int)DayOfWeek.Friday)) IsFriday = true;
+                if (iWeekParsing.Contains((int)DayOfWeek.Saturday)) IsSaturday = true;
             }
 
             /// <summary>
@@ -141,6 +167,23 @@ namespace ORC2020E270_NOK_Viewer
                     StartDateTime = StartDateTime.AddDays(-1);
                     EndDateTime = EndDateTime.AddDays(-1);
                 }
+            }
+
+            /// <summary>
+            /// Check if this shift is the current running shift
+            /// </summary>
+            /// <returns>Returns true if it is the current running shift</returns>
+            public bool IsCurrentShift()
+            {
+                DateTime now = DateTime.Now;
+                int weekDay = (int)now.DayOfWeek;
+
+                // check if current day is matching with week pattern
+                if (!iWeekParsing.Contains(weekDay)) return false;
+
+                // check if current date time is inside of shift start/end time
+                if ((now >= StartDateTime) && (now <= EndDateTime)) return true;
+                else return false;
             }
         }
         private List<Shift> shiftObjList = new List<Shift>();
@@ -167,13 +210,6 @@ namespace ORC2020E270_NOK_Viewer
 
         public MainWindow()
         {
-            var rnd = new Random();
-            QueryResults = new List<SQLView>();
-
-            for (int i = 0; i < 100; i++)
-            {
-                QueryResults.Add(new SQLView() { ID = i, Ref = "abc", OkNOk = (short)rnd.Next(0,3) });
-            }
             shiftList = new List<string>();
             shiftList.Clear();
 
@@ -212,17 +248,6 @@ namespace ORC2020E270_NOK_Viewer
             menuSettings.UISearchElement.Visibility = menuSettings.UISearchElement.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        public class SQLView
-        {
-            public int ID { get; set; }
-            public string Ref { get; set; }
-            public short OkNOk { get; set; }
-        }
-
-        
-
-        
-
         /// <summary>
         /// Load settings from settings.ini file
         /// </summary>
@@ -238,12 +263,14 @@ namespace ORC2020E270_NOK_Viewer
             String sTmp = "";
             IniFile settings = new IniFile(settingsIniFile);
 
+            // set logger file path
+            if (!settings.readString("Global", "LogConfigFile", out sTmp)) sTmp = "";
+            Logger.XmlLoggerConfiguration(sTmp);
+
             // load application logger name
             if (!settings.readString("Global", "LoggerName", out sTmp)) sTmp = "";
 
-            // get logger
-            Logger.XmlLoggerConfiguration(sTmp);
-            log = Logger.GetLogger("Application");
+            log = Logger.GetLogger(sTmp);
 
             log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Loading application settings...");
 
@@ -320,6 +347,35 @@ namespace ORC2020E270_NOK_Viewer
         }
 
         /// <summary>
+        /// Set current shift after app startup
+        /// If no shift matching, data grid will be set to empty
+        /// </summary>
+        private void SetStartupSift()
+        {
+            log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Setting startup shift...");
+            if (shiftObjList.Count == 0) return;
+
+            // check what is the first shift is meeting current date time
+            for (int i = 0; i < shiftObjList.Count; i++)
+            {
+                if (shiftObjList[i].IsCurrentShift())
+                {
+                    SelectShift(i);
+                    if (isShiftSelected)
+                    {
+                        log.InfoFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name,
+                            String.Format("Startup selected shift (index: {0}) {1}", i, selectedShift.Name));
+                    }
+                    else
+                    {
+                        log.InfoFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Shift was not selected");
+                    }
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
         /// Select shift based on selected index
         /// </summary>
         /// <param name="index">Selected index</param>
@@ -331,6 +387,7 @@ namespace ORC2020E270_NOK_Viewer
                 IconPopup.ShowDialog("Selected shift index is outside of the range", IconPopupType.Error);
                 tShiftName.Text = "Please select manually the time interval";
                 stCusomToolBar.IsEnabled = true;
+                isShiftSelected = false;
                 return;
             }
 
@@ -339,22 +396,126 @@ namespace ORC2020E270_NOK_Viewer
             {
                 tShiftName.Text = customQueryName;
                 stCusomToolBar.IsEnabled = true;
+                isShiftSelected = false;
                 return;
             }
 
             // shift was selected
             // load settings
 
-            Shift selShift = shiftObjList[index];
-            selShift.UpdateDateAndTime();
+            selectedShift = shiftObjList[index];
+            selectedShift.UpdateDateAndTime();
 
-            dpStartDate.SelectedDate = selShift.StartDateTime;
-            tpStartTime.SelectedTime = selShift.StartDateTime;
-            dpEndDate.SelectedDate = selShift.EndDateTime;
-            tpEndTime.SelectedTime = selShift.EndDateTime;
-            tShiftName.Text = selShift.Name;
+            dpStartDate.SelectedDate = selectedShift.StartDateTime;
+            tpStartTime.SelectedTime = selectedShift.StartDateTime;
+            dpEndDate.SelectedDate = selectedShift.EndDateTime;
+            tpEndTime.SelectedTime = selectedShift.EndDateTime;
+            tShiftName.Text = selectedShift.Name;
 
             stCusomToolBar.IsEnabled = false;
+            isShiftSelected = true;
+        }
+
+        /// <summary>
+        /// Check SQL database connections.
+        /// If connection is closed try open it
+        /// </summary>
+        /// <returns></returns>
+        private bool CheckDataBaseConnection()
+        {
+            // check if database connection is open
+            if (dbCon.State == ConnectionState.Open) return true;
+
+
+            try
+            {
+                // database connection is closed or broken
+                // try close it first
+                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Database connection is closed or broken");
+                dbCon.Close();
+            }
+            catch (Exception ex)
+            {
+                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+            }
+
+            try
+            {
+                // open connection string
+                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Try to open database connection");
+                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, 
+                    String.Format("Connection string: {0}", dbConnectionString));
+
+                dbCon.ConnectionString = dbConnectionString;
+                dbCon.Open();
+            }
+            catch(Exception ex)
+            {
+                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+                IconPopup.ShowDialog("Open Database: " + ex.Message, IconPopupType.Critical);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Update query data set
+        /// </summary>
+        private void UpdateDataSet()
+        {
+            /*
+             string connectionString = "Data Source=.;Initial Catalog=pubs;Integrated Security=True";
+            string sql = "SELECT * FROM Authors";
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlDataAdapter dataadapter = new SqlDataAdapter(sql, connection);
+            DataSet ds = new DataSet();
+            connection.Open();
+            dataadapter.Fill(ds, "Authors_table");
+            connection.Close();
+            dataGridView1.DataSource = ds;
+            dataGridView1.DataMember = "Authors_table";             
+             */
+
+            if (selectedShift == null) return;
+            if (!isShiftSelected) return;
+
+            // check database connection state
+            if (!CheckDataBaseConnection()) return;
+
+            // build SQL query
+            String sqlQuery = "SELECT Product_Error_Events.PSN, " +
+                                     "Product_Error_Events.Event_DateTime, " +
+                                     "Product_Quality.Huf_Part_Number, " +
+                                     "Product_Quality.BMW_part_number_finish_good, " +
+                                     "Product_Quality.Description, " +
+                                     "Product_Quality.Part_serial_number, " +
+                                     "Product_Error_Events.Error_Code, " +
+                                     "Product_Error_Events.Error_Description, " +
+                                     "Product_Error_Events.Test_Result, " +
+                                     "Product_Error_Events.Test_Limit " +
+                                "FROM Product_Error_Events INNER JOIN Product_Quality ON Product_Error_Events.PSN = Product_Quality.PSN " +
+                                "WHERE ([Product_Error_Events.Event_DateTime] >= @startDateTime) AND ([Product_Error_Events.Event_DateTime] < @endDateTime)";
+
+            try
+            {
+                using (SqlCommand sqlCmd = new SqlCommand(sqlQuery, dbCon))
+                {
+                    sqlCmd.Parameters.Add("startDateTime", SqlDbType.DateTime).Value = selectedShift.StartDateTime;
+                    sqlCmd.Parameters.Add("endDateTime", SqlDbType.DateTime).Value = selectedShift.EndDateTime;
+
+                    using (SqlDataAdapter sqlData = new SqlDataAdapter(sqlCmd))
+                    {
+                        sqlData.Fill(queryDataSet);
+                    }
+                }
+
+                //dgNokListView
+            }
+            catch (Exception ex)
+            {
+                IconPopup.ShowDialog("Update dataset: " + ex.Message, IconPopupType.Error);
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -362,6 +523,8 @@ namespace ORC2020E270_NOK_Viewer
             LoadSettings();
             LoadShiftList();
             LoadMenuSettings(searchEnable: true);
+            SetStartupSift();
+            UpdateDataSet();
         }
 
         private void bCustomShowData_Click(object sender, RoutedEventArgs e)

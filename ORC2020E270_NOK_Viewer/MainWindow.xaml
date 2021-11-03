@@ -80,13 +80,18 @@
                         SelectionChanged="lbShifts_SelectionChanged">
                         <ListBox.Resources>
                             <Style TargetType="ScrollBar" BasedOn="{StaticResource MaterialDesignScrollBarMinimal}"/>
-                        </ListBox.Resources>                    
+                        </ListBox.Resources>
                     </ListBox>
                 </DockPanel>
             </materialDesign:DrawerHost.LeftDrawerContent>
-        <!--#endregion-->
+            <!--#endregion-->
 
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="183*"/>
+                    <ColumnDefinition Width="806*"/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition x:Name="RowTitle" Height="80"/>
                     <RowDefinition x:Name="RowDateTimeRange" Height="70" materialDesign:BottomDashedLineAdorner.Brush="Black"/>
@@ -96,7 +101,7 @@
                 <materialDesign:ColorZone
                     Grid.Row="0"
                     Mode="PrimaryDark"
-                    Padding="16" Margin="0,0,0,0" VerticalAlignment="Stretch">
+                    Padding="16" Margin="0,0,-0.4,0" VerticalAlignment="Stretch" Grid.ColumnSpan="3">
                     <DockPanel>
                         <materialDesign:PopupBox                    
                             DockPanel.Dock="Right"
@@ -153,7 +158,7 @@
                 <!--#endregion-->
 
                 <!--#region Date and Time -->
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,-0.4,0">
                     <StackPanel x:Name="stCusomToolBar" Margin="0" Orientation="Horizontal">
                         <DatePicker x:Name="dpStartDate"
                             SelectedDate=""
@@ -192,13 +197,14 @@
                     </StackPanel>
                 </Grid>
                 <DataGrid
+                    x:Name="dgNokListView"
                     Grid.Row="2"
                     AutoGenerateColumns="True"
-                    ItemsSource="{Binding Path=QueryResults}"
+                    ItemsSource="{Binding Path=queryDataSet}"
                     CanUserAddRows="False"
                     SelectionUnit="Cell"
                     SelectionMode="Extended" 
-                    IsReadOnly="True"/>
+                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,-0.4,-0.2"/>
                 <!--#endregion-->
             </Grid>
         </materialDesign:DrawerHost>
