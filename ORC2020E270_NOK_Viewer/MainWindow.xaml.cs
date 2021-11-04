@@ -246,6 +246,39 @@ namespace ORC2020E270_NOK_Viewer
         {
             menuSettings.UISearchElement.IsEnabled = searchEnable;
             menuSettings.UISearchElement.Visibility = menuSettings.UISearchElement.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
+
+            if (searchEnable)
+            {
+                CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lbShifts.ItemsSource);
+                view.Filter = MenuFilter;
+            }
+        }
+
+        /// <summary>
+        /// Delegate menu filter for list box
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns>Returns a boolean value that indicates whether or not the given item should be visible on the list</returns>
+        private bool MenuFilter(object obj)
+        {
+            if (string.IsNullOrEmpty(txBoxItemsSearchBox.Text))
+            {
+                return true;
+            }
+            else
+            {
+                return (obj.ToString().IndexOf(txBoxItemsSearchBox.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+        }
+
+        /// <summary>
+        /// Text changed event for search box in the menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void txBoxItemsSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            CollectionViewSource.GetDefaultView(lbShifts.ItemsSource).Refresh();
         }
 
         /// <summary>

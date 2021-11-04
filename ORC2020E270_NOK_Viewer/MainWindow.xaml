@@ -67,6 +67,7 @@
                         materialDesign:TextFieldAssist.TextFieldCornerRadius="4"
                         Visibility="{Binding Path=menuSettings.UISearchElement.Visibility}"
                         IsEnabled="{Binding Path=menuSettings.UISearchElement.IsEnabled}"
+                        TextChanged="txBoxItemsSearchBox_TextChanged"
                         />
                     <ListBox 
                         x:Name="lbShifts" 
