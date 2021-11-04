@@ -55,7 +55,6 @@
                         IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}"/>
                     <TextBox 
                         x:Name="txBoxItemsSearchBox"
-                        Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}"
                         DockPanel.Dock="Top"
                         Margin="16, 4"
                         Width="200"
@@ -72,8 +71,6 @@
                     <ListBox 
                         x:Name="lbShifts" 
                         Margin="0 16 0 16"
-                        SelectedIndex="{Binding SelectedIndex}"
-                        SelectedItem="{Binding SelectedItem, UpdateSourceTrigger=PropertyChanged}"
                         ItemsSource="{Binding Path=shiftList}"
                         PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp"
                         AutomationProperties.Name="DemoPagesListBox"
@@ -193,7 +190,8 @@
                             Style="{StaticResource MaterialDesignRaisedDarkButton}"
                             ToolTip="Update query"
                             Content="Show"
-                            IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" Click="bCustomShowData_Click" />
+                            IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                            Click="bCustomShowData_Click" />
                         <Separator/>
                     </StackPanel>
                 </Grid>
