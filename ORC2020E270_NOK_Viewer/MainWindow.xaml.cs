@@ -39,8 +39,11 @@ namespace ORC2020E270_NOK_Viewer
         
         public List<String> shiftList { get; set; }
 
-        public DataSet queryDataSet = new DataSet("Shift_NOK_Counter");
+        public DataSet queryDataSet = new DataSet();
 
+        private int x1 = 10;
+        private int x2 = 5;
+        public int sum = 0;
 
         //public String SelectedShiftName { get; set; }
 
@@ -391,6 +394,7 @@ namespace ORC2020E270_NOK_Viewer
             // check what is the first shift is meeting current date time
             for (int i = 0; i < shiftObjList.Count; i++)
             {
+                shiftObjList[i].UpdateDateAndTime();
                 if (shiftObjList[i].IsCurrentShift())
                 {
                     SelectShift(i);
@@ -403,9 +407,13 @@ namespace ORC2020E270_NOK_Viewer
                     {
                         log.InfoFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Shift was not selected");
                     }
-                    break;
+                    return;
                 }
             }
+
+            // there is no running shift to load
+            // set custom view
+            SelectShift(-1);
         }
 
         /// <summary>
@@ -414,10 +422,12 @@ namespace ORC2020E270_NOK_Viewer
         /// <param name="index">Selected index</param>
         private void SelectShift(int index)
         {
+            isShiftSelected = false;
+
             // check if selected index is outside of the shiftObjList count
             if ((index < 0) || (index > shiftObjList.Count))
             {
-                IconPopup.ShowDialog("Selected shift index is outside of the range", IconPopupType.Error);
+                //IconPopup.ShowDialog("Selected shift index is outside of the range", IconPopupType.Error);
                 tShiftName.Text = "Please select manually the time interval";
                 stCusomToolBar.IsEnabled = true;
                 isShiftSelected = false;
@@ -449,72 +459,98 @@ namespace ORC2020E270_NOK_Viewer
             isShiftSelected = true;
         }
 
-        /// <summary>
-        /// Check SQL database connections.
-        /// If connection is closed try open it
-        /// </summary>
-        /// <returns></returns>
-        private bool CheckDataBaseConnection()
-        {
-            // check if database connection is open
-            if (dbCon.State == ConnectionState.Open) return true;
+        ///// <summary>
+        ///// Check SQL database connections.
+        ///// If connection is closed try open it
+        ///// </summary>
+        ///// <returns></returns>
+        //private async void CheckDataBaseConnection()
+        //{
+        //    // check if database connection is open
+        //    if (Global.dbCon.State == ConnectionState.Open) return;
 
 
-            try
-            {
-                // database connection is closed or broken
-                // try close it first
-                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Database connection is closed or broken");
-                dbCon.Close();
-            }
-            catch (Exception ex)
-            {
-                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
-            }
+        //    try
+        //    {
+        //        // database connection is closed or broken
+        //        // try close it first
+        //        log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Database connection is closed or broken");
+        //        dbCon.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+        //    }
 
-            try
-            {
-                // open connection string
-                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Try to open database connection");
-                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, 
-                    String.Format("Connection string: {0}", dbConnectionString));
+        //    try
+        //    {
+        //        // open connection string
+        //        log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Try to open database connection");
+        //        log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, 
+        //            String.Format("Connection string: {0}", dbConnectionString));
 
-                dbCon.ConnectionString = dbConnectionString;
-                dbCon.Open();
-            }
-            catch(Exception ex)
-            {
-                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
-                IconPopup.ShowDialog("Open Database: " + ex.Message, IconPopupType.Critical);
-                return false;
-            }
+        //        Global.dbCon.ConnectionString = dbConnectionString;
 
-            return true;
-        }
+        //        //dbCon.Open();
+
+        //        TaskRunningPopup tOpenDb = new TaskRunningPopup(null, "Open Database", PackIconKind.Database);
+        //        await DialogHost.Show(tOpenDb);
+
+        //        if (!tOpenDb.Result) throw new Exception(tOpenDb.ErrorMsg);
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+        //        IconPopup.ShowDialog("Open Database: " + ex.Message, IconPopupType.Critical);
+        //        return;
+        //    }
+        //}
 
         /// <summary>
         /// Update query data set
         /// </summary>
-        private void UpdateDataSet()
+        private async void UpdateDataSet(DateTime startDate, DateTime endDate)
         {
-            /*
-             string connectionString = "Data Source=.;Initial Catalog=pubs;Integrated Security=True";
-            string sql = "SELECT * FROM Authors";
-            SqlConnection connection = new SqlConnection(connectionString);
-            SqlDataAdapter dataadapter = new SqlDataAdapter(sql, connection);
-            DataSet ds = new DataSet();
-            connection.Open();
-            dataadapter.Fill(ds, "Authors_table");
-            connection.Close();
-            dataGridView1.DataSource = ds;
-            dataGridView1.DataMember = "Authors_table";             
-             */
+            // check if database connection is open
+            if (Global.dbCon.State != ConnectionState.Open)
+            {
+                try
+                {
+                    // database connection is closed or broken
+                    // try close it first
+                    log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Database connection is closed or broken");
+                    dbCon.Close();
+                }
+                catch (Exception ex)
+                {
+                    log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+                }
 
-            if (selectedShift == null) return;
-            if (!isShiftSelected) return;
+                try
+                {
+                    // open connection string
+                    log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Try to open database connection");
+                    log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name,
+                        String.Format("Connection string: {0}", dbConnectionString));
 
-            // check database connection state
-            if (!CheckDataBaseConnection()) return;
+                    dbCon.ConnectionString = dbConnectionString;
+
+                    //dbCon.Open();
+
+                    TaskRunningPopup tOpenDb = new TaskRunningPopup(dbCon.Open, "Open Database", PackIconKind.Database);
+                    await DialogHost.Show(tOpenDb);
+
+                    if (!tOpenDb.Result) throw new Exception(tOpenDb.ErrorMsg);
+                }
+                catch (Exception ex)
+                {
+                    log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+                    IconPopup.ShowDialog("Open Database: " + ex.Message, IconPopupType.Critical);
+                    return;
+                }
+            }
+
+            if (dbCon.State != ConnectionState.Open) return;
 
             // build SQL query
             String sqlQuery = "SELECT Product_Error_Events.PSN, " +
@@ -528,36 +564,40 @@ namespace ORC2020E270_NOK_Viewer
                                      "Product_Error_Events.Test_Result, " +
                                      "Product_Error_Events.Test_Limit " +
                                 "FROM Product_Error_Events INNER JOIN Product_Quality ON Product_Error_Events.PSN = Product_Quality.PSN " +
-                                "WHERE ([Product_Error_Events.Event_DateTime] >= @startDateTime) AND ([Product_Error_Events.Event_DateTime] < @endDateTime)";
+                                "WHERE (Product_Error_Events.Event_DateTime >= @startDateTime) AND (Product_Error_Events.Event_DateTime < @endDateTime) " +
+                                "ORDER BY Product_Error_Events.Event_DateTime;";
 
-            try
+            
+            Task.Run(new Action(() =>
             {
-                using (SqlCommand sqlCmd = new SqlCommand(sqlQuery, dbCon))
+                try
                 {
-                    sqlCmd.Parameters.Add("startDateTime", SqlDbType.DateTime).Value = selectedShift.StartDateTime;
-                    sqlCmd.Parameters.Add("endDateTime", SqlDbType.DateTime).Value = selectedShift.EndDateTime;
-
-                    using (SqlDataAdapter sqlData = new SqlDataAdapter(sqlCmd))
+                    queryDataSet.Clear();
+                    using (SqlCommand sqlCmd = new SqlCommand(sqlQuery, dbCon))
                     {
+                        sqlCmd.Parameters.Add("startDateTime", SqlDbType.DateTime).Value = startDate;
+                        sqlCmd.Parameters.Add("endDateTime", SqlDbType.DateTime).Value = endDate;
+
+                        SqlDataAdapter sqlData = new SqlDataAdapter(sqlCmd);
                         sqlData.Fill(queryDataSet);
+
+                        Dispatcher.BeginInvoke((Action)(() => dgNokListView.ItemsSource = queryDataSet.CreateDataReader()));
+                        
                     }
                 }
-
-                //dgNokListView
-            }
-            catch (Exception ex)
-            {
-                IconPopup.ShowDialog("Update dataset: " + ex.Message, IconPopupType.Error);
-            }
+                catch (Exception ex)
+                {
+                    IconPopup.ShowDialog("Update dataset: " + ex.Message, IconPopupType.Error);
+                }
+            }))
+                .ConfigureAwait(true)
+                .GetAwaiter()
+                .OnCompleted(() => { });
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadSettings();
-            LoadShiftList();
-            LoadMenuSettings(searchEnable: true);
-            SetStartupSift();
-            UpdateDataSet();
+            
         }
 
         private void bCustomShowData_Click(object sender, RoutedEventArgs e)
@@ -567,6 +607,30 @@ namespace ORC2020E270_NOK_Viewer
         private void lbShifts_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SelectShift(lbShifts.SelectedIndex);
+            
+            if (isShiftSelected) UpdateDataSet(selectedShift.StartDateTime, selectedShift.EndDateTime);
+            else
+            {
+                dgNokListView.ItemsSource = null;
+            }
+        }
+
+        private void DialogHost_Loaded(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
+        private void dgNokListView_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadSettings();
+            LoadShiftList();
+            LoadMenuSettings(searchEnable: true);
+            SetStartupSift();
+            if (isShiftSelected) UpdateDataSet(selectedShift.StartDateTime, selectedShift.EndDateTime);
+            else
+            {
+                dgNokListView.ItemsSource = null;
+            }
         }
     }    
 }

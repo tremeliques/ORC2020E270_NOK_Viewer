@@ -21,7 +21,8 @@
         </Grid.RowDefinitions>
         <TextBlock x:Name="tMessage" 
                    Margin="10 10 10 10"
-                   FontSize="18" Grid.Row="0"/>
+                   FontSize="18" Grid.Row="0"
+                   TextWrapping="Wrap" />
         <Button Grid.Row="1" 
                 IsDefault="True" Style="{StaticResource MaterialDesignRaisedDarkButton}"
                 Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}" 

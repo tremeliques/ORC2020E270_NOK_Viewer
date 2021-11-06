@@ -69,11 +69,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Global.cs" />
     <Compile Include="IconPopup.xaml.cs">
       <DependentUpon>IconPopup.xaml</DependentUpon>
     </Compile>
     <Compile Include="SimplePopup.xaml.cs">
       <DependentUpon>SimplePopup.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TaskRunningPopup.xaml.cs">
+      <DependentUpon>TaskRunningPopup.xaml</DependentUpon>
     </Compile>
     <Page Include="IconPopup.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -92,6 +96,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="SimplePopup.xaml">
+      <SubType>Designer</SubType>
+      <Generator>XamlIntelliSenseFileGenerator</Generator>
+    </Page>
+    <Page Include="TaskRunningPopup.xaml">
       <SubType>Designer</SubType>
       <Generator>XamlIntelliSenseFileGenerator</Generator>
     </Page>

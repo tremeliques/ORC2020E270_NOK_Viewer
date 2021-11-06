@@ -41,7 +41,7 @@
 
     <materialDesign:DialogHost
         Identifier="RootDialog"
-        DialogTheme="Inherit">
+        DialogTheme="Inherit" Loaded="DialogHost_Loaded">
         <!--#region Menu-->
         <materialDesign:DrawerHost
                 IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}">
@@ -199,11 +199,11 @@
                     x:Name="dgNokListView"
                     Grid.Row="2"
                     AutoGenerateColumns="True"
-                    ItemsSource="{Binding Path=queryDataSet}"
+
                     CanUserAddRows="False"
                     SelectionUnit="Cell"
                     SelectionMode="Extended" 
-                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,-0.4,-0.2"/>
+                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,-0.4,-0.2" Loaded="dgNokListView_Loaded"/>
                 <!--#endregion-->
             </Grid>
         </materialDesign:DrawerHost>
