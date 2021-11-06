@@ -85,11 +85,6 @@
             <!--#endregion-->
 
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="4"/>
-                    <ColumnDefinition Width="183*"/>
-                    <ColumnDefinition Width="806*"/>
-                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition x:Name="RowTitle" Height="80"/>
                     <RowDefinition x:Name="RowDateTimeRange" Height="70" materialDesign:BottomDashedLineAdorner.Brush="Black"/>
