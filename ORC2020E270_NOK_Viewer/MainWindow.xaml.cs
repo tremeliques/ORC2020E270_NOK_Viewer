@@ -17,8 +17,10 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using MaterialDesignThemes.Wpf;
+using System.Globalization;
 
 using uBix.Utilities;
+using System.Threading;
 
 namespace ORC2020E270_NOK_Viewer
 {
@@ -216,6 +218,8 @@ namespace ORC2020E270_NOK_Viewer
             shiftList = new List<string>();
             shiftList.Clear();
 
+            SetCulture();
+
             InitializeComponent();
         }
 
@@ -239,6 +243,37 @@ namespace ORC2020E270_NOK_Viewer
 
             theme.SetBaseTheme(DarkModeToggleButton.IsChecked == true ? Theme.Dark : Theme.Light);
             paletteHelper.SetTheme(theme);
+        }
+
+        /// <summary>
+        /// Set the Specific Culture for app
+        /// </summary>
+        /// <param name="culture">Culture string, example: "en-US" <see cref="CultureInfo"/></param>
+        private void SetCulture(string culture = null)
+        {
+            /*
+             * Starting with the .NET Framework 4.5, you can set the culture and UI culture of all threads in an application domain
+             * more directly by assigning a CultureInfo object that represents that culture to the DefaultThreadCurrentCulture and
+             * DefaultThreadCurrentUICulture properties. The following example uses these properties to ensure that all threads in
+             * the default application domain share the same culture.
+             */
+            if (string.IsNullOrEmpty(culture)) culture = Application.Current.FindResource("strCulture").ToString();
+
+            try
+            {
+                CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture(culture);
+                CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CreateSpecificCulture(culture);
+                Thread.CurrentThread.CurrentUICulture = CultureInfo.CreateSpecificCulture(culture);
+            }
+            // If an exception occurs, we'll just fall back to the system default.
+            catch (CultureNotFoundException)
+            {
+                return;
+            }
+            catch (ArgumentException)
+            {
+                return;
+            }
         }
 
         /// <summary>
