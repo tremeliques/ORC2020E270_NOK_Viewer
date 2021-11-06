@@ -21,6 +21,7 @@ using System.Globalization;
 
 using uBix.Utilities;
 using System.Threading;
+using System.Windows.Markup;
 
 namespace ORC2020E270_NOK_Viewer
 {
@@ -261,9 +262,17 @@ namespace ORC2020E270_NOK_Viewer
 
             try
             {
-                CultureInfo.DefaultThreadCurrentCulture = CultureInfo.CreateSpecificCulture(culture);
-                CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.CreateSpecificCulture(culture);
-                Thread.CurrentThread.CurrentUICulture = CultureInfo.CreateSpecificCulture(culture);
+                var cultureInfo = CultureInfo.CreateSpecificCulture(culture);
+                cultureInfo.DateTimeFormat.ShortDatePattern = "dd/MM/yyyy";
+                cultureInfo.DateTimeFormat.LongDatePattern = "dd/MM/yyyy";
+
+                CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+                CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+                CultureInfo.CurrentCulture = cultureInfo;
+                CultureInfo.CurrentUICulture = cultureInfo;
+
+                // Note: if the xml language is set the DatePicker will lose the date and time format 
+                //this.Language = XmlLanguage.GetLanguage(cultureInfo.Name);
             }
             // If an exception occurs, we'll just fall back to the system default.
             catch (CultureNotFoundException)

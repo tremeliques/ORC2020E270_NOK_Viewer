@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
         xmlns:local="clr-namespace:ORC2020E270_NOK_Viewer"
         mc:Ignorable="d"       
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"        
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Normal"
         TextElement.FontSize="15"
@@ -14,7 +15,6 @@
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
-        Language="{Binding ElementName=strCulture}"
         
         Title="MainWindow" Height="800" MinHeight="800" Width="1000" MinWidth="800" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen">
 
@@ -154,27 +154,27 @@
                 <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,0">
                     <StackPanel x:Name="stCusomToolBar" Margin="0" Orientation="Horizontal">
                         <DatePicker x:Name="dpStartDate"
-                            SelectedDate=""
+                            SelectedDate="{x:Static sys:DateTime.Now}"
                             Margin="5"
                             Width="140"
                             materialDesign:HintAssist.Hint="Start Date"
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" HorizontalAlignment="Center" />
-                        <materialDesign:TimePicker x:Name="tpStartTime"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                        <materialDesign:TimePicker x:Name="tpStartTime"   
+                            SelectedTime="{x:Static sys:DateTime.Now}"
                             Is24Hours="True"
-                            SelectedTime="" 
                             Margin="5"
                             Width="140"
                             materialDesign:HintAssist.Hint="Start Time"
                             Style="{StaticResource MaterialDesignOutlinedTimePicker}" />
                         <DatePicker x:Name="dpEndDate"
-                            SelectedDate="" 
+                            SelectedDate="{x:Static sys:DateTime.Now}" 
                             Margin="40 5 5 5"
                             Width="140"
                             materialDesign:HintAssist.Hint="End Date"
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
-                        <materialDesign:TimePicker x:Name="tpEndTime"
+                        <materialDesign:TimePicker x:Name="tpEndTime"   
+                            SelectedTime="{x:Static sys:DateTime.Now}"
                             Is24Hours="True"
-                            SelectedTime="" 
                             Margin="5"
                             Width="140"
                             materialDesign:HintAssist.Hint="End Time"
