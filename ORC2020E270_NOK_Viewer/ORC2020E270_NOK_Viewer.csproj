@@ -69,7 +69,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Global.cs" />
     <Compile Include="IconPopup.xaml.cs">
       <DependentUpon>IconPopup.xaml</DependentUpon>
     </Compile>

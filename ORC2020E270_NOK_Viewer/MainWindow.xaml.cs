@@ -466,6 +466,10 @@ namespace ORC2020E270_NOK_Viewer
                 tShiftName.Text = "Please select manually the time interval";
                 stCusomToolBar.IsEnabled = true;
                 isShiftSelected = false;
+
+                dpStartDate.SelectedDate = DateTime.Now;
+                dpEndDate.SelectedDate = DateTime.Now;
+
                 return;
             }
 
@@ -547,7 +551,7 @@ namespace ORC2020E270_NOK_Viewer
         private async void UpdateDataSet(DateTime startDate, DateTime endDate)
         {
             // check if database connection is open
-            if (Global.dbCon.State != ConnectionState.Open)
+            if (dbCon.State != ConnectionState.Open)
             {
                 try
                 {
@@ -588,46 +592,44 @@ namespace ORC2020E270_NOK_Viewer
             if (dbCon.State != ConnectionState.Open) return;
 
             // build SQL query
-            String sqlQuery = "SELECT Product_Error_Events.PSN, " +
-                                     "Product_Error_Events.Event_DateTime, " +
-                                     "Product_Quality.Huf_Part_Number, " +
-                                     "Product_Quality.BMW_part_number_finish_good, " +
-                                     "Product_Quality.Description, " +
-                                     "Product_Quality.Part_serial_number, " +
-                                     "Product_Error_Events.Error_Code, " +
-                                     "Product_Error_Events.Error_Description, " +
-                                     "Product_Error_Events.Test_Result, " +
-                                     "Product_Error_Events.Test_Limit " +
+            String sqlQuery = "SELECT Product_Error_Events.PSN AS [PSN], " +
+                                     "Product_Error_Events.Event_DateTime AS [Date and Time], " +
+                                     "Product_Quality.Huf_Part_Number AS [Huf Number], " +
+                                     "Product_Quality.BMW_part_number_finish_good AS [BMW Number], " +
+                                     "Product_Quality.Description AS [Part name], " +
+                                     "Product_Quality.Part_serial_number AS [Serial number], " +
+                                     "Product_Error_Events.Error_Code AS [Error code], " +
+                                     "Product_Error_Events.Error_Description AS [Error Description], " +
+                                     "Product_Error_Events.Test_Result AS [Test result], " +
+                                     "Product_Error_Events.Test_Limit AS [Fail limit] " +
                                 "FROM Product_Error_Events INNER JOIN Product_Quality ON Product_Error_Events.PSN = Product_Quality.PSN " +
                                 "WHERE (Product_Error_Events.Event_DateTime >= @startDateTime) AND (Product_Error_Events.Event_DateTime < @endDateTime) " +
                                 "ORDER BY Product_Error_Events.Event_DateTime;";
 
-            
-            Task.Run(new Action(() =>
+
+
+            bCustomShowData.IsEnabled = false;
+            try
             {
-                try
+                queryDataSet.Clear();
+                using (SqlCommand sqlCmd = new SqlCommand(sqlQuery, dbCon))
                 {
-                    queryDataSet.Clear();
-                    using (SqlCommand sqlCmd = new SqlCommand(sqlQuery, dbCon))
-                    {
-                        sqlCmd.Parameters.Add("startDateTime", SqlDbType.DateTime).Value = startDate;
-                        sqlCmd.Parameters.Add("endDateTime", SqlDbType.DateTime).Value = endDate;
+                    sqlCmd.Parameters.Add("startDateTime", SqlDbType.DateTime).Value = startDate;
+                    sqlCmd.Parameters.Add("endDateTime", SqlDbType.DateTime).Value = endDate;
 
-                        SqlDataAdapter sqlData = new SqlDataAdapter(sqlCmd);
-                        sqlData.Fill(queryDataSet);
+                    SqlDataAdapter sqlData = new SqlDataAdapter(sqlCmd);
+                    sqlData.Fill(queryDataSet);
 
-                        Dispatcher.BeginInvoke((Action)(() => dgNokListView.ItemsSource = queryDataSet.CreateDataReader()));
-                        
-                    }
+                    //Dispatcher.BeginInvoke((Action)(() => dgNokListView.ItemsSource = queryDataSet.CreateDataReader()));
+                    dgNokListView.ItemsSource = queryDataSet.CreateDataReader();
+                    if (!isShiftSelected) bCustomShowData.IsEnabled = true;
                 }
-                catch (Exception ex)
-                {
-                    IconPopup.ShowDialog("Update dataset: " + ex.Message, IconPopupType.Error);
-                }
-            }))
-                .ConfigureAwait(true)
-                .GetAwaiter()
-                .OnCompleted(() => { });
+            }
+            catch (Exception ex)
+            {
+                IconPopup.ShowDialog("Update dataset: " + ex.Message, IconPopupType.Error);
+                if (!isShiftSelected) bCustomShowData.IsEnabled = true;
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -637,6 +639,10 @@ namespace ORC2020E270_NOK_Viewer
 
         private void bCustomShowData_Click(object sender, RoutedEventArgs e)
         {
+            DateTime startDT = new DateTime(dpStartDate.SelectedDate.Value.Date.Ticks + tpStartTime.SelectedTime.Value.Ticks);
+            DateTime endDT = new DateTime(dpEndDate.SelectedDate.Value.Date.Ticks + tpEndTime.SelectedTime.Value.Ticks);
+            UpdateDataSet(startDT, endDT);
+            isShiftSelected = false;
         }
 
         private void lbShifts_SelectionChanged(object sender, SelectionChangedEventArgs e)
