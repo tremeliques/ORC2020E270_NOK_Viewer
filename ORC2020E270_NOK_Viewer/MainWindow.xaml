@@ -87,7 +87,7 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition x:Name="RowTitle" Height="80"/>
-                    <RowDefinition x:Name="RowDateTimeRange" Height="70" materialDesign:BottomDashedLineAdorner.Brush="Black"/>
+                    <RowDefinition x:Name="RowDateTimeRange" Height="80" materialDesign:BottomDashedLineAdorner.Brush="Black"/>
                     <RowDefinition x:Name="RowQueryResult" Height="90*"/>
                 </Grid.RowDefinitions>
                 <!--#region Title -->
@@ -151,7 +151,7 @@
                 <!--#endregion-->
 
                 <!--#region Date and Time -->
-                <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,-0.4,0">
+                <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,0">
                     <StackPanel x:Name="stCusomToolBar" Margin="0" Orientation="Horizontal">
                         <DatePicker x:Name="dpStartDate"
                             SelectedDate=""
@@ -187,8 +187,8 @@
                             Content="Show"
                             IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
                             Click="bCustomShowData_Click" />
-                        <Separator/>
                     </StackPanel>
+                    <Separator Style="{StaticResource MaterialDesignSeparator}" VerticalAlignment="Bottom" Margin="0,0,0,-2"/>
                 </Grid>
                 <DataGrid
                     x:Name="dgNokListView"
@@ -198,7 +198,7 @@
                     CanUserAddRows="False"
                     SelectionUnit="Cell"
                     SelectionMode="Extended" 
-                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,-0.4,-0.2" Loaded="dgNokListView_Loaded"/>
+                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,0,0" Loaded="dgNokListView_Loaded"/>
                 <!--#endregion-->
             </Grid>
         </materialDesign:DrawerHost>
