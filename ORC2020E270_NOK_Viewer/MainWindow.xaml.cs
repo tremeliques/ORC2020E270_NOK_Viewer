@@ -631,13 +631,13 @@ namespace ORC2020E270_NOK_Viewer
 
                     //Dispatcher.BeginInvoke((Action)(() => dgNokListView.ItemsSource = queryDataSet.CreateDataReader()));
                     dgNokListView.ItemsSource = queryDataSet.CreateDataReader();
-                    if (!isShiftSelected) bCustomShowData.IsEnabled = true;
                 }
+                bCustomShowData.IsEnabled = true;
             }
             catch (Exception ex)
             {
                 IconPopup.ShowDialog("Update dataset: " + ex.Message, IconPopupType.Error);
-                if (!isShiftSelected) bCustomShowData.IsEnabled = true;
+                bCustomShowData.IsEnabled = true;
             }
         }
 
@@ -648,8 +648,16 @@ namespace ORC2020E270_NOK_Viewer
 
         private void bCustomShowData_Click(object sender, RoutedEventArgs e)
         {
-            DateTime startDT = new DateTime(dpStartDate.SelectedDate.Value.Date.Ticks + tpStartTime.SelectedTime.Value.Ticks);
-            DateTime endDT = new DateTime(dpEndDate.SelectedDate.Value.Date.Ticks + tpEndTime.SelectedTime.Value.Ticks);
+            DateTime startDT = dpStartDate.SelectedDate.Value.Date;
+            startDT = startDT.AddHours(tpStartTime.SelectedTime.Value.Hour);
+            startDT = startDT.AddMinutes(tpStartTime.SelectedTime.Value.Minute);
+            startDT = startDT.AddSeconds(tpStartTime.SelectedTime.Value.Second);
+
+            DateTime endDT = dpEndDate.SelectedDate.Value.Date;
+            endDT = endDT.AddHours(tpEndTime.SelectedTime.Value.Hour);
+            endDT = endDT.AddMinutes(tpEndTime.SelectedTime.Value.Minute);
+            endDT = endDT.AddSeconds(tpEndTime.SelectedTime.Value.Second);
+
             UpdateDataSet(startDT, endDT);
             isShiftSelected = false;
         }
