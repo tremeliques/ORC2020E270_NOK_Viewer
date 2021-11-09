@@ -14,7 +14,6 @@ namespace ORC2020E270_NOK_Viewer
     public partial class TaskRunningPopup : UserControl
     {
         private Action toExec;
-        private SqlConnection sqlCon;
 
         public bool Result { private set; get; }
         public String ErrorMsg { private set; get; }

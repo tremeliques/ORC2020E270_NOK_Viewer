@@ -16,7 +16,7 @@
         FontFamily="{DynamicResource MaterialDesignFont}"
         DataContext="{Binding RelativeSource={RelativeSource Self}}"
         
-        Title="MainWindow" Height="800" MinHeight="800" Width="1000" MinWidth="800" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="800" MinHeight="800" Width="1000" MinWidth="800" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
 
     <!--<Window.Resources>
         <Style x:Key="xxPopupMsg" TargetType="{x:Type materialDesign:DialogHost}">
@@ -125,13 +125,13 @@
                                 </Grid>
 
                                 <Separator/>
-                                <ListBox>
+                                <ListBox x:Name="lbOptions" SelectionChanged="lbOptions_SelectionChanged">
                                     <ListBoxItem
-                                Content="Hello World" />
-                                    <ListBoxItem
-                                    Content="Nice Popup" />
-                                    <ListBoxItem
-                                    Content="Goodbye" />
+                                        Content="Export to Excel" />
+                                    <ListBoxItem 
+                                        Content="Export to CSV" />
+                                    <ListBoxItem 
+                                        Content="Goodbye" />
                                 </ListBox>
                             </StackPanel>
                         </materialDesign:PopupBox>
@@ -194,7 +194,7 @@
                     x:Name="dgNokListView"
                     Grid.Row="2"
                     AutoGenerateColumns="True"
-
+                    AutoGeneratingColumn="OnAutoGeneratingColumn"
                     CanUserAddRows="False"
                     SelectionUnit="Cell"
                     SelectionMode="Extended" 

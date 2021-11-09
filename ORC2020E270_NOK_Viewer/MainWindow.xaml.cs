@@ -16,12 +16,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
-using MaterialDesignThemes.Wpf;
 using System.Globalization;
-
-using uBix.Utilities;
 using System.Threading;
 using System.Windows.Markup;
+using Microsoft.Win32;
+using MaterialDesignThemes.Wpf;
+
+using ClosedXML.Excel;
+
+using uBix.Utilities;
+
 
 namespace ORC2020E270_NOK_Viewer
 {
@@ -31,6 +35,7 @@ namespace ORC2020E270_NOK_Viewer
     public partial class MainWindow : Window
     {
         private const String customQueryName = "Custom";
+        private const String csvSign = ",";
 
         private SqlConnection dbCon = new SqlConnection();
         private bool isShiftSelected = false;
@@ -43,10 +48,6 @@ namespace ORC2020E270_NOK_Viewer
         public List<String> shiftList { get; set; }
 
         public DataSet queryDataSet = new DataSet();
-
-        private int x1 = 10;
-        private int x2 = 5;
-        public int sum = 0;
 
         //public String SelectedShiftName { get; set; }
 
@@ -223,29 +224,7 @@ namespace ORC2020E270_NOK_Viewer
 
             InitializeComponent();
         }
-
-        private void UIElement_OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            //until we had a StaysOpen flag to Drawer, this will help with scroll bars
-            var dependencyObject = Mouse.Captured as DependencyObject;
-
-            MenuToggleButton.IsChecked = false;
-        }
-
-        /// <summary>
-        /// Event to switch between dark and light theme
-        /// </summary>
-        /// <param name="sender">Object sender</param>
-        /// <param name="e">Event Arguments</param>
-        private void ModifyTheme(object sender, RoutedEventArgs e)
-        {
-            var paletteHelper = new PaletteHelper();
-            var theme = paletteHelper.GetTheme();
-
-            theme.SetBaseTheme(DarkModeToggleButton.IsChecked == true ? Theme.Dark : Theme.Light);
-            paletteHelper.SetTheme(theme);
-        }
-
+        
         /// <summary>
         /// Set the Specific Culture for app
         /// </summary>
@@ -319,16 +298,6 @@ namespace ORC2020E270_NOK_Viewer
         }
 
         /// <summary>
-        /// Text changed event for search box in the menu
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void txBoxItemsSearchBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            CollectionViewSource.GetDefaultView(lbShifts.ItemsSource).Refresh();
-        }
-
-        /// <summary>
         /// Load settings from settings.ini file
         /// </summary>
         private void LoadSettings()
@@ -384,6 +353,8 @@ namespace ORC2020E270_NOK_Viewer
             shiftObjList.Clear();
             shiftList.Clear();
 
+            log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Loading shift list");
+
             // check if shifts files exists
             if (!File.Exists(shiftsIniFile))
             {
@@ -421,6 +392,7 @@ namespace ORC2020E270_NOK_Viewer
                 foreach(Shift shift in shiftObjList)
                 {
                     shiftList.Add(shift.Name);
+                    log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, String.Format("Add shift {0}", shift.Name));
                 }
             }
             shiftList.Add(customQueryName);
@@ -479,6 +451,7 @@ namespace ORC2020E270_NOK_Viewer
                 dpStartDate.SelectedDate = DateTime.Now;
                 dpEndDate.SelectedDate = DateTime.Now;
 
+                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Shift index is outside of the range. Enable custom filter");
                 return;
             }
 
@@ -488,6 +461,11 @@ namespace ORC2020E270_NOK_Viewer
                 tShiftName.Text = customQueryName;
                 stCusomToolBar.IsEnabled = true;
                 isShiftSelected = false;
+
+                dpStartDate.SelectedDate = DateTime.Now;
+                dpEndDate.SelectedDate = DateTime.Now;
+
+                log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Enable custom filter");
                 return;
             }
 
@@ -505,6 +483,140 @@ namespace ORC2020E270_NOK_Viewer
 
             stCusomToolBar.IsEnabled = false;
             isShiftSelected = true;
+
+            log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, String.Format("Was selected {0}", selectedShift.Name));
+        }
+
+        /// <summary>
+        /// Export current dataset to Excel file
+        /// </summary>
+        /// <param name="excelFilePath">Output Excel file path</param>
+        private void ExportDataSetToExcel(String excelFilePath)
+        {
+            if (!queryDataSet.HasErrors)
+            {
+                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "There is no data to export to Excel file");
+                IconPopup.ShowDialog("There is no data to export to Excel file", IconPopupType.Error);
+                return;
+            }
+
+            log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, String.Format("Export data to Excel file: {0}", excelFilePath));
+            try
+            {
+                using(XLWorkbook workbook = new XLWorkbook())
+                {
+                    workbook.Worksheets.Add(queryDataSet);
+                    //workbook.Worksheet(0).Name = String.Format("NOK view - {0}", selectedShift.Name);
+                    workbook.SaveAs(excelFilePath);
+                }
+
+                IconPopup.ShowDialog(String.Format("Data was exported to {0} file", excelFilePath), PackIconKind.MicrosoftExcel);
+            }
+            catch (Exception ex)
+            {
+                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+                IconPopup.ShowDialog(ex.Message, IconPopupType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Export current dataset to Excel file
+        /// </summary>
+        private void ExportDataSetToExcel()
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+
+            if (isShiftSelected) saveDialog.FileName = String.Format("NOK list - {0}", selectedShift.Name);
+            else saveDialog.FileName = "NOK list";
+
+            saveDialog.DefaultExt = ".xlsx";
+            saveDialog.Filter = "Excel 2007 (.xlsx)|*.xlsx";
+
+            Nullable<bool> result = saveDialog.ShowDialog();
+            if (result == true)
+            {
+                ExportDataSetToExcel(saveDialog.FileName);
+            }
+        }
+
+        /// <summary>
+        /// Export current dataset to Excel file
+        /// </summary>
+        /// <param name="csvFilePath">Output CSV file path</param>
+        private void ExportDataSetToCSV(String csvFilePath)
+        {
+            String csvData = "";
+            log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "There is no data to export to CSV file");
+            try
+            {
+                DataTable dt = queryDataSet.Tables[0];
+
+                if (dt.Columns.Count == 0)
+                {
+                    log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "There is no Columns in data table to export to CSV file");
+                    IconPopup.ShowDialog("There is no Columns in data table to export to CSV file", IconPopupType.Error);
+                    return;
+                }
+
+                if (dt.Rows.Count == 0)
+                {
+                    log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "There is no Rows in data table to export to CSV file");
+                    IconPopup.ShowDialog("There is no Rows in data table to export to CSV file", IconPopupType.Error);
+                    return;
+                }
+
+                using (var textWriter = File.CreateText(csvFilePath))
+                {
+                    //create csv header
+                    csvData = dt.Columns[0].ColumnName;
+                    for (int i = 1; i < dt.Columns.Count; i++)
+                    {
+                        csvData += csvSign + dt.Columns[i].ColumnName;
+                    }
+
+                    // write csv header
+                    textWriter.WriteLine(csvData);
+
+                    // fill csv file with table content
+                    foreach(DataRow row in dt.Rows)
+                    {
+                        csvData = row[0].ToString();
+                        for (int i = 1; i < dt.Columns.Count; i++)
+                        {
+                            csvData += csvSign + row[i].ToString();
+                        }
+                        textWriter.WriteLine(csvData);
+                    }
+                    textWriter.Close();
+                }
+                IconPopup.ShowDialog(String.Format("Data was exported to {0} file", csvFilePath), PackIconKind.FileDelimitedOutline);
+            }
+            catch (Exception ex)
+            {
+                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+                IconPopup.ShowDialog(ex.Message, IconPopupType.Error);
+            }
+            
+        }
+
+        /// <summary>
+        /// Export current dataset to Excel file
+        /// </summary>
+        private void ExportDataSetToCSV()
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+
+            if (isShiftSelected) saveDialog.FileName = String.Format("NOK list - {0}", selectedShift.Name);
+            else saveDialog.FileName = "NOK list";
+
+            saveDialog.DefaultExt = ".xlsx";
+            saveDialog.Filter = "CSV file(.csv)|*.csv";
+
+            Nullable<bool> result = saveDialog.ShowDialog();
+            if (result == true)
+            {
+                ExportDataSetToCSV(saveDialog.FileName);
+            }
         }
 
         ///// <summary>
@@ -553,6 +665,8 @@ namespace ORC2020E270_NOK_Viewer
         //        return;
         //    }
         //}
+
+        #region UIEvents
 
         /// <summary>
         /// Update query data set
@@ -690,5 +804,76 @@ namespace ORC2020E270_NOK_Viewer
                 dgNokListView.ItemsSource = null;
             }
         }
-    }    
+
+        private void OnAutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
+        {
+            if (e.PropertyType == typeof(DateTime))
+                (e.Column as System.Windows.Controls.DataGridTextColumn).Binding.StringFormat = "dd/MM/yyyy HH:mm:ss";
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (dbCon.State == ConnectionState.Open) dbCon.Close();
+            dbCon.Dispose();
+
+            queryDataSet.Dispose();
+
+            shiftList.Clear();
+        }
+
+        /// <summary>
+        /// Text changed event for search box in the menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void txBoxItemsSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            CollectionViewSource.GetDefaultView(lbShifts.ItemsSource).Refresh();
+        }
+
+        private void UIElement_OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            //until we had a StaysOpen flag to Drawer, this will help with scroll bars
+            var dependencyObject = Mouse.Captured as DependencyObject;
+
+            MenuToggleButton.IsChecked = false;
+        }
+
+        /// <summary>
+        /// Event to switch between dark and light theme
+        /// </summary>
+        /// <param name="sender">Object sender</param>
+        /// <param name="e">Event Arguments</param>
+        private void ModifyTheme(object sender, RoutedEventArgs e)
+        {
+            var paletteHelper = new PaletteHelper();
+            var theme = paletteHelper.GetTheme();
+
+            theme.SetBaseTheme(DarkModeToggleButton.IsChecked == true ? Theme.Dark : Theme.Light);
+            paletteHelper.SetTheme(theme);
+        }
+
+        private void lbOptions_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // export to excel
+            switch(lbOptions.SelectedIndex)
+            {
+                case 0:
+                    ExportDataSetToExcel();
+                    break;
+
+                case 1:
+                    ExportDataSetToCSV();
+                    break;
+            }
+
+
+
+            lbOptions.UnselectAll();
+        }
+
+        #endregion UIEvents
+
+
+    }
 }
