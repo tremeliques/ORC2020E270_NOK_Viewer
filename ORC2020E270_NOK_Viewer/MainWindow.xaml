@@ -1,33 +1,224 @@
 ﻿<Window x:Class="ORC2020E270_NOK_Viewer.MainWindow"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
         xmlns:local="clr-namespace:ORC2020E270_NOK_Viewer"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
-    <Grid x:Name="gMainGrid" ShowGridLines="False" Uid="gMainGrid">
-        <Grid.RowDefinitions>
-            <!-- Brand bar -->
-            <RowDefinition Height="100px"/>
-            <RowDefinition Height="65px"/>
-            <RowDefinition/>
-            <RowDefinition Height="45px"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
+        mc:Ignorable="d"       
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Normal"
+        TextElement.FontSize="15"
+        TextOptions.TextFormattingMode="Ideal" 
+        TextOptions.TextRenderingMode="Auto"        
+        Background="{DynamicResource MaterialDesignPaper}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}"
+        
+        Title="ORC2020E270 NOK Viewer" Height="800" MinHeight="800" Width="1000" MinWidth="800" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen" Closing="Window_Closing">
 
-        </Grid.ColumnDefinitions>
+    <!--<Window.Resources>
+        <Style x:Key="xxPopupMsg" TargetType="{x:Type materialDesign:DialogHost}">
+            <Setter Property="Content">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <materialDesign:DialogHost
+                            Height="150" 
+                            Width="350">
 
-        <Rectangle Grid.Row="0" Fill="#646464"/>
-        <Image Grid.Row="0" x:Name="piBandLogo" Margin="10,10,0,10" Source="pack://application:,,,/SPMaqLogo.png" Width="230" HorizontalAlignment="Left"/>
-        <Label 
-            Grid.Row="0" 
-            Grid.Column="0"
-            x:Name="lAppNAme" 
-            Foreground="White" 
-            HorizontalContentAlignment="Center" 
-            VerticalContentAlignment="Center" 
-            Content="app name" Margin="10" FontSize="36" Uid="lAppNAme"/>
-    </Grid>
+                            <TextBlock 
+                                Text="Olá Mundo"/>
+                        </materialDesign:DialogHost>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        
+    </Window.Resources>-->
+
+
+    <materialDesign:DialogHost
+        Identifier="RootDialog"
+        DialogTheme="Inherit" Loaded="DialogHost_Loaded">
+        <!--#region Menu-->
+        <materialDesign:DrawerHost
+                IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}">
+            <materialDesign:DrawerHost.LeftDrawerContent>
+                <DockPanel MinWidth="220">
+                    <ToggleButton 
+                        Style="{StaticResource MaterialDesignHamburgerToggleButton}" 
+                        DockPanel.Dock="Top"
+                        HorizontalAlignment="Right" 
+                        Margin="16"
+                        IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}"/>
+                    <TextBox 
+                        x:Name="txBoxItemsSearchBox"
+                        DockPanel.Dock="Top"
+                        Margin="16, 4"
+                        Width="200"
+                        materialDesign:HintAssist.Hint="Search"
+                        materialDesign:HintAssist.IsFloating="True"
+                        materialDesign:TextFieldAssist.HasClearButton="True"
+                        materialDesign:TextFieldAssist.HasOutlinedTextField="True"
+                        materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+                        materialDesign:TextFieldAssist.TextFieldCornerRadius="4"
+                        Visibility="{Binding Path=menuSettings.UISearchElement.Visibility}"
+                        IsEnabled="{Binding Path=menuSettings.UISearchElement.IsEnabled}"
+                        TextChanged="txBoxItemsSearchBox_TextChanged"
+                        />
+                    <ListBox 
+                        x:Name="lbShifts" 
+                        Margin="0 16 0 16"
+                        ItemsSource="{Binding Path=shiftList}"
+                        PreviewMouseLeftButtonUp="UIElement_OnPreviewMouseLeftButtonUp"
+                        AutomationProperties.Name="DemoPagesListBox"
+                        Style="{StaticResource MaterialDesignNavigationPrimaryListBox}"
+                        SelectionChanged="lbShifts_SelectionChanged">
+                        <ListBox.Resources>
+                            <Style TargetType="ScrollBar" BasedOn="{StaticResource MaterialDesignScrollBarMinimal}"/>
+                        </ListBox.Resources>
+                    </ListBox>
+                </DockPanel>
+            </materialDesign:DrawerHost.LeftDrawerContent>
+            <!--#endregion-->
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition x:Name="RowTitle" Height="80"/>
+                    <RowDefinition x:Name="RowDateTimeRange" Height="80" materialDesign:BottomDashedLineAdorner.Brush="Black"/>
+                    <RowDefinition x:Name="RowQueryResult" Height="90*"/>
+                </Grid.RowDefinitions>
+                <!--#region Title -->
+                <materialDesign:ColorZone
+                    Grid.Row="0"
+                    Mode="PrimaryDark"
+                    Padding="16" Margin="0,0,0,0" VerticalAlignment="Stretch" Grid.ColumnSpan="3">
+                    <DockPanel>
+                        <materialDesign:PopupBox                    
+                            DockPanel.Dock="Right"
+                            PlacementMode="BottomAndAlignRightEdges">
+                            <StackPanel>
+                                <Grid Margin="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Text="Light"
+                                        Margin="0 0 10 0"
+                                        Grid.Column="0"/>
+                                    <ToggleButton
+                                        x:Name="DarkModeToggleButton"
+                                        Click="ModifyTheme"
+                                        Grid.Column="1"
+                                        IsChecked="True"/>
+                                    <TextBlock
+                                        Text="Dark"
+                                        Margin="10 0 0 0"
+                                        Grid.Column="2"/>
+                                </Grid>
+                                <Separator/>
+                                <Grid Margin="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Text="Auto refresh"
+                                        Margin="0 0 10 0"
+                                        Grid.Column="0"/>
+                                    <ToggleButton
+                                        x:Name="tgAutoRefreshDataSet"
+                                        Grid.Column="1"
+                                        IsChecked="True"
+                                        Click="tgAutoRefreshDataSet_Click"/>
+                                </Grid>
+                                <Separator/>
+                                <ListBox x:Name="lbOptions" SelectionChanged="lbOptions_SelectionChanged">
+                                    <ListBoxItem
+                                        Content="Export to Excel" />
+                                    <ListBoxItem 
+                                        Content="Export to CSV" />
+                                    <ListBoxItem 
+                                        Content="Info" />
+                                    <ListBoxItem 
+                                        Content="Close application" />
+                                </ListBox>
+                            </StackPanel>
+                        </materialDesign:PopupBox>
+                        <StackPanel
+                            Orientation="Horizontal">
+                            <ToggleButton
+                                x:Name="MenuToggleButton"
+                                Style="{DynamicResource         MaterialDesignHamburgerToggleButton}" />
+                            <TextBlock
+                                x:Name="tShiftName"
+                                VerticalAlignment="Center"
+                                Margin="16 0 0 0"
+                                Text="Shift" />
+                        </StackPanel>
+                    </DockPanel>
+                </materialDesign:ColorZone>
+                <!--#endregion-->
+
+                <!--#region Date and Time -->
+                <Grid Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,0">
+                    <StackPanel x:Name="stCusomToolBar" Margin="0" Orientation="Horizontal">
+                        <DatePicker x:Name="dpStartDate"
+                            SelectedDate="{x:Static sys:DateTime.Now}"
+                            Margin="5"
+                            Width="140"
+                            materialDesign:HintAssist.Hint="Start Date"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                        <materialDesign:TimePicker x:Name="tpStartTime"   
+                            SelectedTime="{x:Static sys:DateTime.Now}"
+                            Is24Hours="True"
+                            Margin="5"
+                            Width="140"
+                            materialDesign:HintAssist.Hint="Start Time"
+                            Style="{StaticResource MaterialDesignOutlinedTimePicker}" />
+                        <DatePicker x:Name="dpEndDate"
+                            SelectedDate="{x:Static sys:DateTime.Now}" 
+                            Margin="40 5 5 5"
+                            Width="140"
+                            materialDesign:HintAssist.Hint="End Date"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" />
+                        <materialDesign:TimePicker x:Name="tpEndTime"   
+                            SelectedTime="{x:Static sys:DateTime.Now}"
+                            Is24Hours="True"
+                            Margin="5"
+                            Width="140"
+                            materialDesign:HintAssist.Hint="End Time"
+                            Style="{StaticResource MaterialDesignOutlinedTimePicker}" />
+                        <Button x:Name="bCustomShowData"
+                            Margin="40 5 5 5"
+                            Height="50"
+                            Style="{StaticResource MaterialDesignRaisedDarkButton}"
+                            ToolTip="Update query"
+                            Content="Show"
+                            IsEnabled="{Binding DataContext.ControlsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                            Click="bCustomShowData_Click" />
+                    </StackPanel>
+                    <Separator Style="{StaticResource MaterialDesignSeparator}" VerticalAlignment="Bottom" Margin="0,0,0,-2"/>
+                </Grid>
+                <DataGrid
+                    x:Name="dgNokListView"
+                    Grid.Row="2"
+                    AutoGenerateColumns="True"
+                    AutoGeneratingColumn="OnAutoGeneratingColumn"
+                    CanUserAddRows="False"
+                    SelectionUnit="Cell"
+                    SelectionMode="Extended" 
+                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,0,0" Loaded="dgNokListView_Loaded"/>
+                <!--#endregion-->
+            </Grid>
+        </materialDesign:DrawerHost>
+    </materialDesign:DialogHost>
 </Window>
