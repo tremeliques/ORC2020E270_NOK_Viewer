@@ -41,6 +41,9 @@ namespace ORC2020E270_NOK_Viewer
         private bool isShiftSelected = false;
         private Shift selectedShift = null;
 
+        System.Timers.Timer refreshTimer = new System.Timers.Timer(1000);
+        uBix.Utilities.Timer queryRefreshDelay = new uBix.Utilities.Timer(TimerResolution.Seconds);
+
         #region BindingElements
 
         public MenuSettings menuSettings { get; private set; } = new MenuSettings();
@@ -64,6 +67,7 @@ namespace ORC2020E270_NOK_Viewer
         private const String settingsIniFile = @".\Config\Settings.ini";
 
         private uint queryRefreshTime = 30;
+        private bool queryAutoRefresh = true;
         private string dbConnectionString = "";
         private string shiftsIniFile = "";
         private log4net.ILog log = log4net.LogManager.GetLogger("");
@@ -326,6 +330,7 @@ namespace ORC2020E270_NOK_Viewer
             log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Loading application settings...");
 
             if (!settings.readUInt("Global", "RefreshTime", out queryRefreshTime)) queryRefreshTime = 30;
+            if (!settings.readBoolean("Global", "QueryAutoRefresh", out queryAutoRefresh)) queryAutoRefresh = true;
             if (!settings.readString("Global", "ShiftsIniFile", out shiftsIniFile)) shiftsIniFile = @".\Config\Shifts.ini";
 
             // reading database connection string
@@ -498,7 +503,15 @@ namespace ORC2020E270_NOK_Viewer
             log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, String.Format("Export data to Excel file: {0}", excelFilePath));
             try
             {
-                using(XLWorkbook workbook = new XLWorkbook())
+                DataTable dt = queryDataSet.Tables[0];
+                if (dt.Rows.Count == 0)
+                {
+                    log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "There is no Rows in data table to export to Excel file");
+                    IconPopup.ShowDialog("There is no Rows in data table to export to Excel file", IconPopupType.Error);
+                    return;
+                }
+
+                using (XLWorkbook workbook = new XLWorkbook())
                 {
                     workbook.Worksheets.Add(queryDataSet);
                     //workbook.Worksheet(0).Name = String.Format("NOK view - {0}", selectedShift.Name);
@@ -677,7 +690,7 @@ namespace ORC2020E270_NOK_Viewer
 
 
 
-            bCustomShowData.IsEnabled = false;
+            Dispatcher.BeginInvoke((Action)(() => bCustomShowData.IsEnabled = false));
             try
             {
                 queryDataSet.Clear();
@@ -689,16 +702,47 @@ namespace ORC2020E270_NOK_Viewer
                     SqlDataAdapter sqlData = new SqlDataAdapter(sqlCmd);
                     sqlData.Fill(queryDataSet);
 
-                    //Dispatcher.BeginInvoke((Action)(() => dgNokListView.ItemsSource = queryDataSet.CreateDataReader()));
-                    dgNokListView.ItemsSource = queryDataSet.CreateDataReader();
+                    Dispatcher.BeginInvoke((Action)(() => dgNokListView.ItemsSource = queryDataSet.CreateDataReader()));
+                    //dgNokListView.ItemsSource = queryDataSet.CreateDataReader();
                 }
-                bCustomShowData.IsEnabled = true;
+                Dispatcher.BeginInvoke((Action)(() => bCustomShowData.IsEnabled = true));
             }
             catch (Exception ex)
             {
+                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
+
                 IconPopup.ShowDialog("Update dataset: " + ex.Message, IconPopupType.Error);
-                bCustomShowData.IsEnabled = true;
+                Dispatcher.BeginInvoke((Action)(() => bCustomShowData.IsEnabled = true));
             }
+        }
+
+        /// <summary>
+        /// Function to be executed from task side to refresh current shift data
+        /// </summary>
+        private void onAutoShiftRefresh(Object source, System.Timers.ElapsedEventArgs e)
+        {
+            // check elapsed time
+            if (!queryRefreshDelay.isTime()) return;
+            queryRefreshDelay.setTime(queryRefreshTime);
+
+            // auto refresh is disabled
+            if (!queryAutoRefresh) return;
+
+            //check if it is a selected shift
+            if (!isShiftSelected) return;
+
+            // check if selected shift object is not null
+            if (selectedShift == null) return;
+
+            // check if selected shift it is the current shift
+            if (!selectedShift.IsCurrentShift()) return;
+
+            // check if database is open
+            // if not, does not make sense try to connect every times that sequence is running
+            if (dbCon.State != ConnectionState.Open) return;
+
+            // updated data set
+            UpdateDataSet(selectedShift.StartDateTime, selectedShift.EndDateTime);
         }
 
         #region UIEvents
@@ -751,6 +795,16 @@ namespace ORC2020E270_NOK_Viewer
             {
                 dgNokListView.ItemsSource = null;
             }
+
+            tgAutoRefreshDataSet.IsChecked = queryAutoRefresh;
+
+            // set query refresh time delay
+            queryRefreshDelay.setTime(10);
+
+            // set timer to refresh dataset
+            refreshTimer.AutoReset = true;
+            refreshTimer.Elapsed += onAutoShiftRefresh;
+            refreshTimer.Enabled = queryAutoRefresh;
         }
 
         private void OnAutoGeneratingColumn(object sender, DataGridAutoGeneratingColumnEventArgs e)
@@ -761,6 +815,9 @@ namespace ORC2020E270_NOK_Viewer
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            refreshTimer.Stop();
+            refreshTimer.Dispose();
+
             if (dbCon.State == ConnectionState.Open) dbCon.Close();
             dbCon.Dispose();
 
@@ -816,6 +873,10 @@ namespace ORC2020E270_NOK_Viewer
                     break;
 
                 case 2:
+                    InfoPopup.ShowDialog();
+                    break;
+
+                case 3:
                     System.Windows.Application.Current.Shutdown();
                     break;
             }
@@ -823,8 +884,26 @@ namespace ORC2020E270_NOK_Viewer
             lbOptions.UnselectAll();
         }
 
+        private void tgAutoRefreshDataSet_Click(object sender, RoutedEventArgs e)
+        {
+            bool bTmp = (tgAutoRefreshDataSet.IsChecked == true ? true: false);
+            if (bTmp == queryAutoRefresh) return;
+
+            queryAutoRefresh = bTmp;
+            refreshTimer.Enabled = queryAutoRefresh;
+
+            // check if settings files exists
+            if (!File.Exists(settingsIniFile)) return;
+
+            IniFile settings = new IniFile(settingsIniFile);
+            if (settings.writeBBoolean("Global", "QueryAutoRefresh", queryAutoRefresh))
+            {
+                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, settings.MsgError);
+            }
+
+            settings.Dispose();
+        }
+
         #endregion UIEvents
-
-
     }
 }

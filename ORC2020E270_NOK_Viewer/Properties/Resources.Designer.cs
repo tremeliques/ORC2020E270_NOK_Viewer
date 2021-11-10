@@ -69,5 +69,25 @@ namespace ORC2020E270_NOK_Viewer.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SPMaqLogo {
+            get {
+                object obj = ResourceManager.GetObject("SPMaqLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SPMaqLogo2 {
+            get {
+                object obj = ResourceManager.GetObject("SPMaqLogo2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }
