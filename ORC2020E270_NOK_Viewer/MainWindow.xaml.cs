@@ -195,6 +195,8 @@ namespace ORC2020E270_NOK_Viewer
         }
         private List<Shift> shiftObjList = new List<Shift>();
         
+
+
         /// <summary>
         /// Menu settings - Search text box
         /// </summary>
@@ -493,13 +495,6 @@ namespace ORC2020E270_NOK_Viewer
         /// <param name="excelFilePath">Output Excel file path</param>
         private void ExportDataSetToExcel(String excelFilePath)
         {
-            if (!queryDataSet.HasErrors)
-            {
-                log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "There is no data to export to Excel file");
-                IconPopup.ShowDialog("There is no data to export to Excel file", IconPopupType.Error);
-                return;
-            }
-
             log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, String.Format("Export data to Excel file: {0}", excelFilePath));
             try
             {
@@ -619,55 +614,6 @@ namespace ORC2020E270_NOK_Viewer
             }
         }
 
-        ///// <summary>
-        ///// Check SQL database connections.
-        ///// If connection is closed try open it
-        ///// </summary>
-        ///// <returns></returns>
-        //private async void CheckDataBaseConnection()
-        //{
-        //    // check if database connection is open
-        //    if (Global.dbCon.State == ConnectionState.Open) return;
-
-
-        //    try
-        //    {
-        //        // database connection is closed or broken
-        //        // try close it first
-        //        log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Database connection is closed or broken");
-        //        dbCon.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
-        //    }
-
-        //    try
-        //    {
-        //        // open connection string
-        //        log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, "Try to open database connection");
-        //        log.DebugFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, 
-        //            String.Format("Connection string: {0}", dbConnectionString));
-
-        //        Global.dbCon.ConnectionString = dbConnectionString;
-
-        //        //dbCon.Open();
-
-        //        TaskRunningPopup tOpenDb = new TaskRunningPopup(null, "Open Database", PackIconKind.Database);
-        //        await DialogHost.Show(tOpenDb);
-
-        //        if (!tOpenDb.Result) throw new Exception(tOpenDb.ErrorMsg);
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        log.ErrorFormat("[{0}]\t{1}", MethodBase.GetCurrentMethod().Name, ex.Message);
-        //        IconPopup.ShowDialog("Open Database: " + ex.Message, IconPopupType.Critical);
-        //        return;
-        //    }
-        //}
-
-        #region UIEvents
-
         /// <summary>
         /// Update query data set
         /// </summary>
@@ -727,7 +673,7 @@ namespace ORC2020E270_NOK_Viewer
                                      "Product_Error_Events.Test_Limit AS [Fail limit] " +
                                 "FROM Product_Error_Events INNER JOIN Product_Quality ON Product_Error_Events.PSN = Product_Quality.PSN " +
                                 "WHERE (Product_Error_Events.Event_DateTime >= @startDateTime) AND (Product_Error_Events.Event_DateTime < @endDateTime) " +
-                                "ORDER BY Product_Error_Events.Event_DateTime;";
+                                "ORDER BY Product_Error_Events.Event_DateTime DESC;";
 
 
 
@@ -754,6 +700,8 @@ namespace ORC2020E270_NOK_Viewer
                 bCustomShowData.IsEnabled = true;
             }
         }
+
+        #region UIEvents
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -816,6 +764,7 @@ namespace ORC2020E270_NOK_Viewer
             if (dbCon.State == ConnectionState.Open) dbCon.Close();
             dbCon.Dispose();
 
+            queryDataSet.Clear();
             queryDataSet.Dispose();
 
             shiftList.Clear();
@@ -865,9 +814,11 @@ namespace ORC2020E270_NOK_Viewer
                 case 1:
                     ExportDataSetToCSV();
                     break;
+
+                case 2:
+                    System.Windows.Application.Current.Shutdown();
+                    break;
             }
-
-
 
             lbOptions.UnselectAll();
         }
