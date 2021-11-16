@@ -7,6 +7,7 @@
         mc:Ignorable="d"       
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:pt="http://propertytools.org/wpf"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Normal"
         TextElement.FontSize="15"
@@ -208,7 +209,9 @@
                     </StackPanel>
                     <Separator Style="{StaticResource MaterialDesignSeparator}" VerticalAlignment="Bottom" Margin="0,0,0,-2"/>
                 </Grid>
-                <DataGrid
+                <!--#endregion-->
+                
+                <!--<DataGrid
                     x:Name="dgNokListView"
                     Grid.Row="2"
                     AutoGenerateColumns="True"
@@ -216,8 +219,62 @@
                     CanUserAddRows="False"
                     SelectionUnit="Cell"
                     SelectionMode="Extended" 
-                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,0,0" Loaded="dgNokListView_Loaded"/>
+                    IsReadOnly="True" Grid.ColumnSpan="3" Margin="0,0,0,0" Loaded="dgNokListView_Loaded"/>-->
+
+                <!--#region Data Table -->
+                <Grid Grid.Row="2">
+                    <DockPanel x:Name="Data" >
+                        <Border Style="{DynamicResource MaterialDesignToolBarMainPanelBorderStyle}"/>
+                        <Expander
+                            x:Name="expanderDetail"
+                            DockPanel.Dock="Right"
+                            ExpandDirection="Left"
+                            IsExpanded="False">
+                            <Expander.Header>
+                                <TextBlock
+                                    x:Name="expanderTitle"
+                                    Text="Select row"
+                                    RenderTransformOrigin=".5,.5">
+                                    <TextBlock.LayoutTransform>
+                                        <RotateTransform
+                                            Angle="90" />
+                                    </TextBlock.LayoutTransform>
+                                </TextBlock>
+                            </Expander.Header>
+                            <StackPanel
+                                Orientation="Vertical"
+                                TextBlock.Foreground="{DynamicResource MaterialDesignBody}"
+                                Margin="8,24,16,24">
+                                <TextBlock
+        Text="Acompanhe todas as notícias de última hora de Portugal e do mundo.Toda a atualidade e cobertura. Notícias do dia, fotos e vídeos. Seja o primeiro a saber." TextWrapping="Wrap" MaxWidth="160"/>
+                                <TextBlock />
+                                <pt:PropertyGrid 
+                                    Margin="8" 
+                                    x:Name="ptGridView"
+                                    SelectedObject="{Binding SelectedRow}"
+                                    MinWidth="180"
+                                    MinHeight="400">
+                                </pt:PropertyGrid>
+                            </StackPanel>
+                        </Expander>
+                        <DataGrid
+                            x:Name="dgNokListView"
+                            Grid.Row="2"
+                            AutoGenerateColumns="True"
+                            AutoGeneratingColumn="OnAutoGeneratingColumn"
+                            CanUserAddRows="False"
+                            SelectionUnit="FullRow"
+                            SelectionMode="Single" 
+                            IsReadOnly="True" 
+                            Margin="0,0,0,0"
+                            DockPanel.Dock="Left" 
+                            Loaded="dgNokListView_Loaded"
+                            SelectionChanged="dgNokListView_SelectionChanged"/>
+                    </DockPanel>
+                </Grid>
+                
                 <!--#endregion-->
+
             </Grid>
         </materialDesign:DrawerHost>
     </materialDesign:DialogHost>

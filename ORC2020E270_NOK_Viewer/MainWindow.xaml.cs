@@ -229,8 +229,10 @@ namespace ORC2020E270_NOK_Viewer
             SetCulture();
 
             InitializeComponent();
+
+            //this.DataContext = new Dlls.ViewData();
         }
-        
+
         /// <summary>
         /// Set the Specific Culture for app
         /// </summary>
@@ -902,6 +904,33 @@ namespace ORC2020E270_NOK_Viewer
             }
 
             settings.Dispose();
+        }
+
+        private void dgNokListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            //var index = (sender as DataGrid).SelectedIndex;
+            //System.Diagnostics.Debug.WriteLine($"Index Sel = {index}");
+
+            //IEnumerable<IDataRecord> typeData = dgNokListView.SelectedItems.Cast<IDataRecord>();
+            // .Select(dr => new EntryRow { PSN = (string)dr["PSN"] });
+
+            //System.Diagnostics.Debug.WriteLine($"Data = {dgNokListView.SelectedCells.Count()}");
+
+            //var data = dgNokListView.SelectedCells;
+
+            //IDataRecord tmp = dgNokListView.SelectedItem as IDataRecord;
+            //for (int i = 0; i < tmp.FieldCount; i++)
+            //{
+            //    System.Diagnostics.Debug.WriteLine($"{tmp.GetName(i)} = {tmp.GetValue(i)}, data type = {tmp.GetFieldType(i)}");
+            //}
+
+            IDataRecord tmp = dgNokListView.SelectedItem as IDataRecord;
+            expanderTitle.Text = $"{tmp.GetName(0)} {tmp.GetValue(0)}";
+            expanderDetail.IsExpanded = true;            
+
+            //IEnumerable<EntryRow> typeData = dgNokListView.SelectedItems.Cast<IDataRecord>().Select(dr => new EntryRow() { PSN = (long)dr.GetOrdinal("PSN") });
+            //System.Diagnostics.Debug.WriteLine($"Count = {typeData.Count()}");
+
         }
 
         #endregion UIEvents
